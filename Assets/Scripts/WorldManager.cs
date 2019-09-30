@@ -75,17 +75,15 @@ public class WorldManager : MonoBehaviour {
         var go = Instantiate((GameObject)Resources.Load("Prefabs/Items/item_" + id), new Vector3(posX + 0.5f, posY + 0.5f, 0), transform.rotation);
         tilesObjetMap[posX, posY] = go;
         if (id == 11) {
-            //tilesLightMap = tilesLightMapCopy;
-            // lightService.RecursivAddNewLight(posX, posY, 0, tilemapLight, tilesLightMapCopy);
             lightService.RecursivAddNewLight(posX, posY, 0, tilemapLight, tilesLightMap);
         }
     }
     public void DeleteItem(int posX, int posY) {
-        if(tilesObjetMap[posX, posY].name == "item_11(Clone)") { // toDo changer cette merde
-            lightService.RecursivDeleteLight(posX, posY, tilemapLight, tilesLightMap);
+        if (tilesObjetMap[posX, posY].name == "item_11(Clone)") { // toDo changer cette merde
+            lightService.RecursivDeleteLight(posX, posY, tilemapLight, tilesLightMap, tilesObjetMap, true);
         }
-        Destroy(tilesObjetMap[posX, posY]);
         tilesObjetMap[posX, posY] = null;
+        Destroy(tilesObjetMap[posX, posY]);
         ManageItems.CreateItemOnMap(posX, posY, 11);
     }
     public void DeleteTile(int x, int y) {

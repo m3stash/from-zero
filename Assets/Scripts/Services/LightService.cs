@@ -60,22 +60,19 @@ public class LightService : MonoBehaviour {
         RecursivDeleteShadow(x - 1, y, tilemapShadow, tilesLightMap, tilemapLight);
         RecursivDeleteShadow(x, y - 1, tilemapShadow, tilesLightMap, tilemapLight);
     }
-    public void RecursivDeleteLight(int x, int y, Tilemap tilemapLight, float[,] tilesLightMap) {
+    public void RecursivDeleteLight(int x, int y, Tilemap tilemapLight, float[,] tilesLightMap, GameObject[,] tilesObjetMap, bool toDelete) {
         if (IsOutOfBound(x, y))
             return;
-        var maxLight = GetNeightboorMinOrMaxOpacity(tilesLightMap, x, y, true);
         var minLight = GetNeightboorMinOrMaxOpacity(tilesLightMap, x, y, false);
-        float newLight = GetAmountLight(tilesWorldMap[x, y], wallTilesMap[x, y], maxLight);
-        // attention pb si on met une torche juste a coté d'une autre => voir a tester si moi == torche et pb de certain résidu de lumière restante
-        //if (minLight <= tilesLightMap[x, y] || maxLight <= tilesLightMap[x, y] || newLight > 1)
-        if (minLight <= tilesLightMap[x, y] || maxLight <= tilesLightMap[x, y])
+        float newLight = GetAmountLight(tilesWorldMap[x, y], wallTilesMap[x, y], minLight);
+        if (newLight <= tilesLightMap[x, y] && !toDelete || !toDelete && tilesLightMap[x, y] == 0.15f) // toDo detecter 
             return;
         tilesLightMap[x, y] = newLight;
         SetTilemapOpacity(tilemapLight, tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
-        RecursivDeleteLight(x + 1, y, tilemapLight, tilesLightMap);
-        RecursivDeleteLight(x, y + 1, tilemapLight, tilesLightMap);
-        RecursivDeleteLight(x - 1, y, tilemapLight, tilesLightMap);
-        RecursivDeleteLight(x, y - 1, tilemapLight, tilesLightMap);
+        RecursivDeleteLight(x + 1, y, tilemapLight, tilesLightMap, tilesObjetMap, false);
+        RecursivDeleteLight(x, y + 1, tilemapLight, tilesLightMap, tilesObjetMap, false);
+        RecursivDeleteLight(x - 1, y, tilemapLight, tilesLightMap, tilesObjetMap, false);
+        RecursivDeleteLight(x, y - 1, tilemapLight, tilesLightMap, tilesObjetMap, false);
     }
     public void RecursivAddShadow(int x, int y, float[,] tilesLightMap, Tilemap tilemapLight) {
         var tileWorldMap = tilesWorldMap[x, y];

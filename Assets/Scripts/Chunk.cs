@@ -71,14 +71,15 @@ public class Chunk : MonoBehaviour {
         }
     }
     private void OnDisable() {
-        DeleteShadowTile();
+        DeleteShadowLightTile();
     }
-    private void DeleteShadowTile() { // TODO change le nom de la méthode
+    private void DeleteShadowLightTile() { // TODO change le nom de la méthode
         var startX = indexX * chunkSize;
         var startY = indexY * chunkSize;
         for (var x = startX; x < startX + chunkSize; x++) {
             for (var y = startY; y < startY + chunkSize; y++) {
                 tilemapShadow.SetTile(new Vector3Int(x, y, 0), null);
+                tilemapLight.SetTile(new Vector3Int(x, y, 0), null);
                 tilemapWall.SetTile(new Vector3Int(x, y, 0), null);
             }
         }

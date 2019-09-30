@@ -3,20 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class LightsPos {
-    public int x;
-    public int y;
-    public LightsPos(int _x, int _y) {
-        x = _x;
-        y = _y;
-    }
-}
-
 public class Chunk : MonoBehaviour {
 
     private float lastIntensity = -1;
     public Tilemap tilemap;
-    public Tilemap tilemapLight;
     public Tilemap tilemapWall;
     public Tilemap ObjectMap;
     public Tilemap tilemapShadow;
@@ -27,17 +17,21 @@ public class Chunk : MonoBehaviour {
     public float[,] tilesShadowMap;
     public GameObject player;
     public CycleDay cycleDay;
-    public int indexX;
-    public int indexY;
-    public int chunkSize;
     public Dictionary<int, TileBase> tilebaseDictionary;
     public TileMapScript tileMapScript; // a supprimer ???
     private bool playerOnChunk = false;
+    public int indexX;
+    public int indexY;
+    public int indexXWorldPos;
+    public int indexYWorldPos;
+    public int chunkSize;
+    public LightService lightService;
     private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
     private bool firstInitialisation = true;
-    public LightService lightService;
 
     private void OnEnable() {
+        indexXWorldPos = indexX * chunkSize;
+        indexYWorldPos = indexY * chunkSize;
         if (!firstInitialisation) {
             RefreshTiles();
             StartCoroutine(CheckPlayerPos());
@@ -47,39 +41,20 @@ public class Chunk : MonoBehaviour {
         var intensity = cycleDay.GetIntensity();
         if (intensity != lastIntensity) {
             lastIntensity = intensity;
-            var startX = indexX * chunkSize;
-            var startY = indexY * chunkSize;
-            for (var x = startX; x < startX + chunkSize; x++) {
-                for (var y = startY; y < startY + chunkSize; y++) {
-                    var shadow = tilesShadowMap[x, y] + intensity;
-                    var light = tilesLightMap[x, y];
-                    var walltTile = wallTilesMap[x, y];
-                    if ((walltTile == 0 && tilesMap[x % chunkSize, y % chunkSize] == 0) || (light == 0 && shadow == 0)) {
-                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
-                        tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
-                    } else {
-                        if (light <= shadow) {
-                            tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, light));
-                            tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
-                        } else {
-                            tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, shadow));
-                            tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
-                        }
-                    }
+            for (var x = indexXWorldPos; x < indexXWorldPos + chunkSize; x++) {
+                for (var y = indexYWorldPos; y < indexYWorldPos + chunkSize; y++) {
+                    lightService.SetTilemapOpacity(tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
                 }
             }
         }
     }
     private void OnDisable() {
-        DeleteShadowLightTile();
+        DeleteTileMapsTiles();
     }
-    private void DeleteShadowLightTile() { // TODO change le nom de la méthode
-        var startX = indexX * chunkSize;
-        var startY = indexY * chunkSize;
-        for (var x = startX; x < startX + chunkSize; x++) {
-            for (var y = startY; y < startY + chunkSize; y++) {
+    private void DeleteTileMapsTiles() {
+        for (var x = indexXWorldPos; x < indexXWorldPos + chunkSize; x++) {
+            for (var y = indexYWorldPos; y < indexYWorldPos + chunkSize; y++) {
                 tilemapShadow.SetTile(new Vector3Int(x, y, 0), null);
-                tilemapLight.SetTile(new Vector3Int(x, y, 0), null);
                 tilemapWall.SetTile(new Vector3Int(x, y, 0), null);
             }
         }
@@ -99,30 +74,13 @@ public class Chunk : MonoBehaviour {
             }
         }
         tilemap.SetTiles(positions, tileArray);
-        SetShadow();
-        SetLight();
+        InitTilesMap();
     }
-    private void SetLight() {
-        // TODO refacto avec le shadow pour pas faire 50 boucles !!!!!!!!!!!!!!!!!!
-        var startX = indexX * chunkSize;
-        var startY = indexY * chunkSize;
-        for (var x = startX; x < startX + chunkSize; x++) {
-            for (var y = startY; y < startY + chunkSize; y++) {
-                tilemapLight.SetTile(new Vector3Int(x, y, 0), tilebaseDictionary[-1]);
-                tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0f, 0f, 0f, 0));
-                /*if (wallTilesMap[x, y] > 0 && tilesLightMap[x, y] < 1) {
-                    tilemapLight.SetTile(new Vector3Int(x, y, 0), tilebaseDictionary[7]);
-                }*/
-            }
-        }
-    }
-    private void SetShadow() {
-        var startX = indexX * chunkSize;
-        var startY = indexY * chunkSize;
-        for (var x = startX; x < startX + chunkSize; x++) {
-            for (var y = startY; y < startY + chunkSize; y++) {
+    private void InitTilesMap() {
+        for (var x = indexXWorldPos; x < indexXWorldPos + chunkSize; x++) {
+            for (var y = indexYWorldPos; y < indexYWorldPos + chunkSize; y++) {
                 tilemapShadow.SetTile(new Vector3Int(x, y, 0), tilebaseDictionary[-1]);
-                tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0f, 0f, 0f, tilesShadowMap[x, y]));
+                tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, tilesShadowMap[x, y]));
                 if (wallTilesMap[x, y] > 0) {
                     tilemapWall.SetTile(new Vector3Int(x, y, 0), tilebaseDictionary[7]);
                 }

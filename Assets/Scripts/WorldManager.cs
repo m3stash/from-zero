@@ -25,7 +25,6 @@ public class WorldManager : MonoBehaviour {
     public int worldSizeX;
     public int worldSizeY;
     public TileBase_cfg tilebase_cfg;
-    public Tilemap tilemapLight;
     public Tilemap tilemapShadow;
     public Tilemap wallMap;
     public int chunkSize;
@@ -35,8 +34,8 @@ public class WorldManager : MonoBehaviour {
         CreateWorldMap();
         CreateLightMap();
         CreatePlayer();
-        chunkService.Init(chunkSize, tilebaseDictionary, tilesWorldMap, tilesLightMap, player, tilemapLight, wallMap, tilesObjetMap, cycleDay, lightService, tilesShadowMap, tilemapShadow);
-        lightService.Init(tilemapLight, tilesWorldMap, tilesLightMap, wallTilesMap, tilemapShadow, tilesShadowMap, cycleDay);
+        chunkService.Init(chunkSize, tilebaseDictionary, tilesWorldMap, tilesLightMap, player, wallMap, cycleDay, lightService, tilesShadowMap, tilemapShadow);
+        lightService.Init(tilesWorldMap, tilesLightMap, wallTilesMap, tilemapShadow, tilesShadowMap, cycleDay);
     }
     private void InitResources() {
         cycleDay = gameObject.GetComponentInChildren<CycleDay>();
@@ -71,16 +70,16 @@ public class WorldManager : MonoBehaviour {
     }
     public void AddItem(int posX, int posY, InventoryItem item) {
         var id = item.config.id;
-        // toDo voir si le mettre directement dans les chunks ne serait pas mieux!
+        // toDo faire un pool d'objet déjà instancié!
         var go = Instantiate((GameObject)Resources.Load("Prefabs/Items/item_" + id), new Vector3(posX + 0.5f, posY + 0.5f, 0), transform.rotation);
         tilesObjetMap[posX, posY] = go;
         if (id == 11) {
-            lightService.RecursivAddNewLight(posX, posY, 0, tilemapLight, tilesLightMap);
+            lightService.RecursivAddNewLight(posX, posY, 0, tilesLightMap);
         }
     }
     public void DeleteItem(int posX, int posY) {
         if (tilesObjetMap[posX, posY].name == "item_11(Clone)") { // toDo changer cette merde
-            lightService.RecursivDeleteLight(posX, posY, tilemapLight, tilesLightMap, tilesObjetMap, true);
+            lightService.RecursivDeleteLight(posX, posY, tilesLightMap, true);
         }
         tilesObjetMap[posX, posY] = null;
         Destroy(tilesObjetMap[posX, posY]);
@@ -90,14 +89,14 @@ public class WorldManager : MonoBehaviour {
         var id = tilesWorldMap[x, y];
         Chunk currentChunk = ManageChunkTile(x, y, 0);
         currentChunk.SetTile(new Vector3Int(x % chunkSize, y % chunkSize, 0), null);
-        lightService.RecursivDeleteShadow(x, y, tilemapShadow, tilesLightMap, tilemapLight);
+        lightService.RecursivDeleteShadow(x, y, tilemapShadow, tilesLightMap);
         ManageItems.CreateItemOnMap(x, y, id);
         RefreshChunkNeightboorTiles(x, y, currentChunk.tilemap);
     }
     public void AddTile(int x, int y, int id) {
         Chunk currentChunk = ManageChunkTile(x, y, id);
         currentChunk.SetTile(new Vector3Int(x % chunkSize, y % chunkSize, 0), tilebaseDictionary[id]);
-        lightService.RecursivAddShadow(x, y, tilesLightMap, tilemapLight);
+        lightService.RecursivAddShadow(x, y, tilesLightMap);
         RefreshChunkNeightboorTiles(x, y, currentChunk.tilemap);
     }
     private Chunk ManageChunkTile(int x, int y, int id) {

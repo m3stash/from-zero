@@ -681,8 +681,6 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 21300000, guid: ecbfa0bcfddfeb34fb417c6096bba7eb, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
@@ -1493,8 +1491,6 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 21300000, guid: ecbfa0bcfddfeb34fb417c6096bba7eb, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
@@ -3075,8 +3071,6 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 106
@@ -3471,6 +3465,20 @@ PrefabInstance:
         type: 3}
       propertyPath: startHour
       value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 3346800735364998950, guid: 41de9baee7b18384084a60e85753b5a1,
+        type: 3}
+      propertyPath: chunkSize
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 938428963, guid: 41de9baee7b18384084a60e85753b5a1, type: 3}
+      propertyPath: m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3346800734221471031, guid: 41de9baee7b18384084a60e85753b5a1,
+        type: 3}
+      propertyPath: m_Mode
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 41de9baee7b18384084a60e85753b5a1, type: 3}

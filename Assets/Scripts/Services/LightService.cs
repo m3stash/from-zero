@@ -5,37 +5,33 @@ using UnityEngine;
 
 public class LightService : MonoBehaviour {
 
-    // private Tilemap tilemapLight;
     private Tilemap tilemapShadow;
     private int[,] tilesWorldMap;
-    // private float[,] tilesLightMap;
     private float[,] tilesShadowMap;
     private int[,] wallTilesMap;
     private CycleDay cycleDay;
 
-    public void Init(Tilemap _tilemapLight, int[,] _tilesWorldMap, float[,] _tilesLightMap, int[,] _wallTilesMap, Tilemap _tilemapShadow, float[,] _tilesShadowMap, CycleDay _cycleDay) {
-        // tilemapLight = _tilemapLight;
+    public void Init(int[,] _tilesWorldMap, float[,] _tilesLightMap, int[,] _wallTilesMap, Tilemap _tilemapShadow, float[,] _tilesShadowMap, CycleDay _cycleDay) {
         tilesWorldMap = _tilesWorldMap;
-        // tilesLightMap = _tilesLightMap;
         wallTilesMap = _wallTilesMap;
         tilemapShadow = _tilemapShadow;
         tilesShadowMap = _tilesShadowMap;
         cycleDay = _cycleDay;
     }
-    public void RecursivAddNewLight(int x, int y, float lastLight, Tilemap tilemapLight, float[,] tilesLightMap) {
+    public void RecursivAddNewLight(int x, int y, float lastLight, float[,] tilesLightMap) {
         if (IsOutOfBound(x, y))
             return;
         float newLight = GetAmountLight(tilesWorldMap[x, y], wallTilesMap[x, y], lastLight);
         if ((newLight >= tilesLightMap[x, y]) || newLight >= 1)
             return;
         tilesLightMap[x, y] = newLight;
-        SetTilemapOpacity(tilemapLight, tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
-        RecursivAddNewLight(x + 1, y, newLight, tilemapLight, tilesLightMap);
-        RecursivAddNewLight(x, y + 1, newLight, tilemapLight, tilesLightMap);
-        RecursivAddNewLight(x - 1, y, newLight, tilemapLight, tilesLightMap);
-        RecursivAddNewLight(x, y - 1, newLight, tilemapLight, tilesLightMap);
+        SetTilemapOpacity(tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
+        RecursivAddNewLight(x + 1, y, newLight, tilesLightMap);
+        RecursivAddNewLight(x, y + 1, newLight, tilesLightMap);
+        RecursivAddNewLight(x - 1, y, newLight, tilesLightMap);
+        RecursivAddNewLight(x, y - 1, newLight, tilesLightMap);
     }
-    public void RecursivDeleteShadow(int x, int y, Tilemap tilemapShadow, float[,] tilesLightMap, Tilemap tilemapLight) {
+    public void RecursivDeleteShadow(int x, int y, Tilemap tilemapShadow, float[,] tilesLightMap) {
         if (IsOutOfBound(x, y))
             return;
         var wallTileMap = wallTilesMap[x, y];
@@ -54,27 +50,28 @@ public class LightService : MonoBehaviour {
         if (newLight < tileLightMap) {
             tilesLightMap[x, y] = newLight;
         }
-        SetTilemapOpacity(tilemapLight, tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
-        RecursivDeleteShadow(x + 1, y, tilemapShadow, tilesLightMap, tilemapLight);
-        RecursivDeleteShadow(x, y + 1, tilemapShadow, tilesLightMap, tilemapLight);
-        RecursivDeleteShadow(x - 1, y, tilemapShadow, tilesLightMap, tilemapLight);
-        RecursivDeleteShadow(x, y - 1, tilemapShadow, tilesLightMap, tilemapLight);
+        SetTilemapOpacity(tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
+        RecursivDeleteShadow(x + 1, y, tilemapShadow, tilesLightMap);
+        RecursivDeleteShadow(x, y + 1, tilemapShadow, tilesLightMap);
+        RecursivDeleteShadow(x - 1, y, tilemapShadow, tilesLightMap);
+        RecursivDeleteShadow(x, y - 1, tilemapShadow, tilesLightMap);
     }
-    public void RecursivDeleteLight(int x, int y, Tilemap tilemapLight, float[,] tilesLightMap, GameObject[,] tilesObjetMap, bool toDelete) {
+    public void RecursivDeleteLight(int x, int y, float[,] tilesLightMap, bool toDelete) {
         if (IsOutOfBound(x, y))
             return;
         var minLight = GetNeightboorMinOrMaxOpacity(tilesLightMap, x, y, false);
         float newLight = GetAmountLight(tilesWorldMap[x, y], wallTilesMap[x, y], minLight);
-        if (newLight <= tilesLightMap[x, y] && !toDelete || !toDelete && tilesLightMap[x, y] == 0.15f) // toDo detecter 
+        var shadowOpacity = GetNeightboorMinOrMaxOpacity(tilesShadowMap, x, y, false) + cycleDay.GetIntensity();
+        if (newLight <= tilesLightMap[x, y] && !toDelete || !toDelete && tilesLightMap[x, y] == 0.15f || newLight > 1)
             return;
         tilesLightMap[x, y] = newLight;
-        SetTilemapOpacity(tilemapLight, tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
-        RecursivDeleteLight(x + 1, y, tilemapLight, tilesLightMap, tilesObjetMap, false);
-        RecursivDeleteLight(x, y + 1, tilemapLight, tilesLightMap, tilesObjetMap, false);
-        RecursivDeleteLight(x - 1, y, tilemapLight, tilesLightMap, tilesObjetMap, false);
-        RecursivDeleteLight(x, y - 1, tilemapLight, tilesLightMap, tilesObjetMap, false);
+        SetTilemapOpacity(tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
+        RecursivDeleteLight(x + 1, y, tilesLightMap, false);
+        RecursivDeleteLight(x, y + 1, tilesLightMap, false);
+        RecursivDeleteLight(x - 1, y, tilesLightMap, false);
+        RecursivDeleteLight(x, y - 1, tilesLightMap, false);
     }
-    public void RecursivAddShadow(int x, int y, float[,] tilesLightMap, Tilemap tilemapLight) {
+    public void RecursivAddShadow(int x, int y, float[,] tilesLightMap) {
         var tileWorldMap = tilesWorldMap[x, y];
         var wallTileMap = wallTilesMap[x, y];
         var tileLightMap = tilesLightMap[x, y];
@@ -93,25 +90,22 @@ public class LightService : MonoBehaviour {
         if (newLight > tileLightMap) {
             tilesLightMap[x, y] = newLight;
         }
-        SetTilemapOpacity(tilemapLight, tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
-        RecursivAddShadow(x + 1, y, tilesLightMap, tilemapLight);
-        RecursivAddShadow(x, y + 1, tilesLightMap, tilemapLight);
-        RecursivAddShadow(x - 1, y, tilesLightMap, tilemapLight);
-        RecursivAddShadow(x, y - 1, tilesLightMap, tilemapLight);
+        SetTilemapOpacity(tilemapShadow, tilesShadowMap, tilesLightMap, x, y);
+        RecursivAddShadow(x + 1, y, tilesLightMap);
+        RecursivAddShadow(x, y + 1, tilesLightMap);
+        RecursivAddShadow(x - 1, y, tilesLightMap);
+        RecursivAddShadow(x, y - 1, tilesLightMap);
     }
-    private void SetTilemapOpacity(Tilemap tilemapLight, Tilemap tilemapShadow, float[,] tilesShadowMap, float[,] tilesLightMap, int x, int y) {
+    public void SetTilemapOpacity(Tilemap tilemapShadow, float[,] tilesShadowMap, float[,] tilesLightMap, int x, int y) {
         var shadow = tilesShadowMap[x, y] + cycleDay.GetIntensity();
         var light = tilesLightMap[x, y];
         if ((wallTilesMap[x, y] == 0 && tilesWorldMap[x, y] == 0) || (shadow == 0 && light == 0)) {
-            tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
             tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
         } else {
             if (light <= shadow) {
-                tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, light));
-                tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
+                tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, light));
             } else {
                 tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, shadow));
-                tilemapLight.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
             }
         }
     }
@@ -144,5 +138,9 @@ public class LightService : MonoBehaviour {
             }
         }
         return newLight > 1 ? 1 : newLight;
+    }
+
+    public void setTilemapColor() {
+
     }
 }

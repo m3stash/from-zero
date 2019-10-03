@@ -12,7 +12,6 @@ public class ChunkService : MonoBehaviour {
     private float[,] tilesLightMap;
     private int[,] tilesWorldMap;
     private int[,] wallTilesMap;
-    private GameObject[,] tilesObjetMap;
     private CycleDay cycleDay;
     private Dictionary<int, TileBase> tilebaseDictionary;
     private Transform worldMapTransform;
@@ -22,7 +21,6 @@ public class ChunkService : MonoBehaviour {
     private int halfChunk;
     private int boundX;
     private int boundY;
-    private Tilemap tilemapLight;
     private Tilemap tilemapWall;
     private LightService lightService;
     private float[,] tilesShadowMap;
@@ -41,7 +39,7 @@ public class ChunkService : MonoBehaviour {
     public Chunk GetChunk(int posX, int posY) {
         return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
     }
-    public void Init(int _chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] _tilesWorldMap, float[,] _tilesLightMap, GameObject _player, Tilemap _tilemapLight, Tilemap _tilemapWall, GameObject[,] _tilesObjetMap, CycleDay _cycleDay, LightService _lightService, float[,] _tilesShadowMap, Tilemap _tilemapShadow) {
+    public void Init(int _chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] _tilesWorldMap, float[,] _tilesLightMap, GameObject _player, Tilemap _tilemapWall, CycleDay _cycleDay, LightService _lightService, float[,] _tilesShadowMap, Tilemap _tilemapShadow) {
         boundX = tilesMapChunks.GetUpperBound(0);
         boundY = tilesMapChunks.GetUpperBound(1);
         halfChunk = _chunkSize / 2;
@@ -52,10 +50,7 @@ public class ChunkService : MonoBehaviour {
         tilesWorldMap = _tilesWorldMap;
         tilemapWall = _tilemapWall;
         chunkSize = _chunkSize;
-        tilemapLight = _tilemapLight;
-        tilesObjetMap = _tilesObjetMap;
         cycleDay = _cycleDay;
-        tilesObjetMap = _tilesObjetMap;
         lightService = _lightService;
         tilesShadowMap = _tilesShadowMap;
         tilemapShadow = _tilemapShadow;
@@ -91,11 +86,9 @@ public class ChunkService : MonoBehaviour {
         Chunk ck = chunk.GetComponent<Chunk>();
         ck.tilemap = tilemap;
         ck.cycleDay = cycleDay;
-        ck.tilemapLight = tilemapLight;
         ck.tilemapWall = tilemapWall;
         ck.tilesLightMap = tilesLightMap;
         ck.wallTilesMap = wallTilesMap;
-        ck.tilesObjetMap = tilesObjetMap;
         ck.lightService = lightService;
         ck.tilesShadowMap = tilesShadowMap;
         ck.tilemapShadow = tilemapShadow;
@@ -127,7 +120,6 @@ public class ChunkService : MonoBehaviour {
             Chunk ck = chunk.GetComponent<Chunk>();
             ck.tilemap = tilemap;
             ck.cycleDay = cycleDay;
-            ck.tilemapLight = tilemapLight;
             ck.tilemapWall = tilemapWall;
             ck.tilesLightMap = tilesLightMap;
             ck.wallTilesMap = wallTilesMap;
@@ -135,7 +127,6 @@ public class ChunkService : MonoBehaviour {
             ck.lightService = lightService;
             ck.tilebaseDictionary = tilebaseDictionary;
             ck.tilesMap = null;
-            ck.tilesObjetMap = tilesObjetMap;
             ck.tilesShadowMap = tilesShadowMap;
             ck.tilemapShadow = tilemapShadow;
             ck.indexX = -1;

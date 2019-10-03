@@ -20,11 +20,9 @@ public class ChunkService : MonoBehaviour {
     private List<Chunk> usedChunk = new List<Chunk>();
     private int halfChunk;
     private int boundX;
-    private int boundY;
-    private Tilemap tilemapWall;
+    private int boundY; 
     private LightService lightService;
     private float[,] tilesShadowMap;
-    private Tilemap tilemapShadow;
     //      O | O | O
     //      O | # | O  => # = perso on int array
     //      O | O | O
@@ -39,7 +37,7 @@ public class ChunkService : MonoBehaviour {
     public Chunk GetChunk(int posX, int posY) {
         return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
     }
-    public void Init(int _chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] _tilesWorldMap, float[,] _tilesLightMap, GameObject _player, Tilemap _tilemapWall, CycleDay _cycleDay, LightService _lightService, float[,] _tilesShadowMap, Tilemap _tilemapShadow) {
+    public void Init(int _chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] _tilesWorldMap, float[,] _tilesLightMap, GameObject _player, CycleDay _cycleDay, LightService _lightService, float[,] _tilesShadowMap) {
         boundX = tilesMapChunks.GetUpperBound(0);
         boundY = tilesMapChunks.GetUpperBound(1);
         halfChunk = _chunkSize / 2;
@@ -48,13 +46,10 @@ public class ChunkService : MonoBehaviour {
         tilebaseDictionary = _tilebaseDictionary;
         tilesLightMap = _tilesLightMap;
         tilesWorldMap = _tilesWorldMap;
-        tilemapWall = _tilemapWall;
         chunkSize = _chunkSize;
         cycleDay = _cycleDay;
         lightService = _lightService;
         tilesShadowMap = _tilesShadowMap;
-        tilemapShadow = _tilemapShadow;
-        tilemapWall.GetComponent<TileMapScript>().tilesWorldMap = tilesWorldMap;
         // CreatePoolChunk(6, 25); // cas pour 32 tiles
         CreatePoolChunk(3, 13); // cas pour 64 tiles
         // RenderPartialMapForTest(); // for debug map
@@ -80,25 +75,25 @@ public class ChunkService : MonoBehaviour {
     public void RenderPartialMapForTest() {
         GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
         chunk.transform.parent = worldMapTransform;
-        Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
-        Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
-        TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();
         Chunk ck = chunk.GetComponent<Chunk>();
-        ck.tilemap = tilemap;
+        Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
+        /*Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
+        TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();*/
+        /*ck.tileMapScript = tileMapScript;
+ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
+        // ck.tilemap = tilemap;
+
         ck.cycleDay = cycleDay;
-        ck.tilemapWall = tilemapWall;
         ck.tilesLightMap = tilesLightMap;
         ck.wallTilesMap = wallTilesMap;
         ck.lightService = lightService;
         ck.tilesShadowMap = tilesShadowMap;
-        ck.tilemapShadow = tilemapShadow;
         ck.chunkSize = 64;
         ck.tilebaseDictionary = tilebaseDictionary;
         ck.indexX = 0;
         ck.indexY = 0;
-        ck.tileMapScript = tileMapScript;
-        ck.tileMapScript.tilesWorldMap = tilesWorldMap;
-        for (var x = 0; x < 1024; x++) {
+
+        /*for (var x = 0; x < 1024; x++) {
             for (var y = 0; y < 1024; y++) {
                 int tileIndex = tilesWorldMap[x, y];
                 if (tileIndex > 0) {
@@ -107,20 +102,21 @@ public class ChunkService : MonoBehaviour {
                     tilemap.SetTile(new Vector3Int(x, y, 0), null);
                 }
             }
-        }
+        }*/
     }
     public void InitialiseChunkPooling() {
         for (var i = 0; i < numberOfPool; i++) {
             GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
             chunk.gameObject.SetActive(false);
             chunk.transform.parent = worldMapTransform;
-            Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
+            /*Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
             Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
-            TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();
+            TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();*/
+            // ck.tilemap = tilemap;
+            /*ck.tileMapScript = tileMapScript;
+          ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
             Chunk ck = chunk.GetComponent<Chunk>();
-            ck.tilemap = tilemap;
             ck.cycleDay = cycleDay;
-            ck.tilemapWall = tilemapWall;
             ck.tilesLightMap = tilesLightMap;
             ck.wallTilesMap = wallTilesMap;
             ck.chunkSize = chunkSize;
@@ -128,12 +124,10 @@ public class ChunkService : MonoBehaviour {
             ck.tilebaseDictionary = tilebaseDictionary;
             ck.tilesMap = null;
             ck.tilesShadowMap = tilesShadowMap;
-            ck.tilemapShadow = tilemapShadow;
             ck.indexX = -1;
             ck.indexY = -1;
-            ck.tileMapScript = tileMapScript;
-            ck.tileMapScript.tilesWorldMap = tilesWorldMap;
             unUsedChunk.Add(ck);
+            
         }
     }
     public void CreatePoolChunk(int xStart, int yStart) {
@@ -153,8 +147,15 @@ public class ChunkService : MonoBehaviour {
         chunkGo.transform.position = new Vector3(chunkPosX * chunkSize, chunkPosY * chunkSize, 0);
         ck.player = player;
         ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!!
-        ck.tileMapScript.tilePosX = chunkPosX * chunkSize;
-        ck.tileMapScript.tilePosY = chunkPosY * chunkSize;
+        Tilemap[] tilemaps = chunkGo.GetComponentsInChildren<Tilemap>();
+        tilemaps[0].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
+        tilemaps[1].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
+        tilemaps[0].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
+        tilemaps[1].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
+        tilemaps[0].GetComponent<TileMapScript>().tilesWorldMap = tilesWorldMap;
+        tilemaps[1].GetComponent<TileMapScript>().tilesWorldMap = tilesWorldMap;
+        /*ck.tileMapScript.tilePosX = chunkPosX * chunkSize;
+        ck.tileMapScript.tilePosY = chunkPosY * chunkSize;*/
         ck.indexX = chunkPosX;
         ck.indexY = chunkPosY;
         ck.gameObject.SetActive(true);

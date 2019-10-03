@@ -16,7 +16,7 @@ public class WorldManager : MonoBehaviour {
     private float[,] tilesLightMap;
     private float[,] tilesShadowMap;
     private int[,] tilesWorldMap;
-    private int[,] wallTilesMap; // toDo rename
+    private int[,] wallTilesMap;
     private GameObject[,] tilesObjetMap;
     private Dictionary<int, TileBase> tilebaseDictionary;
     private Dictionary<int, Item_cfg> ObjectbaseDictionary;
@@ -25,8 +25,6 @@ public class WorldManager : MonoBehaviour {
     public int worldSizeX;
     public int worldSizeY;
     public TileBase_cfg tilebase_cfg;
-    public Tilemap tilemapShadow;
-    public Tilemap wallMap;
     public int chunkSize;
 
     void Start() {
@@ -34,8 +32,8 @@ public class WorldManager : MonoBehaviour {
         CreateWorldMap();
         CreateLightMap();
         CreatePlayer();
-        chunkService.Init(chunkSize, tilebaseDictionary, tilesWorldMap, tilesLightMap, player, wallMap, cycleDay, lightService, tilesShadowMap, tilemapShadow);
-        lightService.Init(tilesWorldMap, tilesLightMap, wallTilesMap, tilemapShadow, tilesShadowMap, cycleDay);
+        chunkService.Init(chunkSize, tilebaseDictionary, tilesWorldMap, tilesLightMap, player, cycleDay, lightService, tilesShadowMap);
+        lightService.Init(tilesWorldMap, tilesLightMap, wallTilesMap, tilesShadowMap, cycleDay);
     }
     private void InitResources() {
         cycleDay = gameObject.GetComponentInChildren<CycleDay>();
@@ -89,7 +87,7 @@ public class WorldManager : MonoBehaviour {
         var id = tilesWorldMap[x, y];
         Chunk currentChunk = ManageChunkTile(x, y, 0);
         currentChunk.SetTile(new Vector3Int(x % chunkSize, y % chunkSize, 0), null);
-        lightService.RecursivDeleteShadow(x, y, tilemapShadow, tilesLightMap);
+        lightService.RecursivDeleteShadow(x, y, tilesLightMap);
         ManageItems.CreateItemOnMap(x, y, id);
         RefreshChunkNeightboorTiles(x, y, currentChunk.tilemap);
     }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -11,7 +10,9 @@ using UnityEngine;
 namespace UnityEngine.Tilemaps {
     [Serializable]
     [CreateAssetMenu(fileName = "New Terrain Tile", menuName = "Tiles/Terrain Tile")]
+
     public class TerrainTile : TileBase {
+
         [SerializeField]
         public Sprite[] m_Sprites;
         public Texture2D texture2d;
@@ -36,7 +37,7 @@ namespace UnityEngine.Tilemaps {
             UpdateTile(location, tileMap, ref tileData);
         }
 
-        private bool CheckIfSameId(int otherId, int currentId) {
+        /*private bool CheckIfSameId(int otherId, int currentId) {
             if (otherId > 0) {
                 if((currentId == 1 && otherId == 2) || (currentId == 2 && otherId == 1)) {
                     return true;
@@ -44,7 +45,7 @@ namespace UnityEngine.Tilemaps {
                 return otherId == currentId;
             }
             return otherId == currentId;
-        }
+        }*/
 
         private void UpdateTile(Vector3Int location, ITilemap tileMap, ref TileData tileData) {
             tileData.transform = Matrix4x4.identity;
@@ -68,48 +69,49 @@ namespace UnityEngine.Tilemaps {
 
             if (yMore <= yLength) {
                 int top = worldMap[currentTilePosX, yMore];
-                top = CheckIfSameId(top, currentId) ? top : 0;
+                // top = CheckIfSameId(top, currentId) ? top : 0;
                 mask += top > 0 ? 1 : 0;
             }
 
             if (xMore <= xLength) {
                 int right = worldMap[xMore, currentTilePosY];
-                right = CheckIfSameId(right, currentId) ? right : 0;
+                // right = CheckIfSameId(right, currentId) ? right : 0;
                 mask += right > 0 ? 4 : 0;
 
                 if (yMore <= yLength) {
                     int diaRightTop = worldMap[xMore, yMore];
-                    diaRightTop = CheckIfSameId(diaRightTop, currentId) ? diaRightTop : 0;
+                    // diaRightTop = CheckIfSameId(diaRightTop, currentId) ? diaRightTop : 0;
                     mask += diaRightTop > 0 ? 2 : 0;
                 }
 
                 if (yLess > -1) {
                     int diagBottomRight = worldMap[xMore, yLess];
-                    diagBottomRight = CheckIfSameId(diagBottomRight, currentId) ? diagBottomRight : 0;
+                    // diagBottomRight = CheckIfSameId(diagBottomRight, currentId) ? diagBottomRight : 0;
+                    diagBottomRight = currentId;
                     mask += diagBottomRight > 0 ? 8 : 0;
                 }
             }
 
             if (yLess > -1) {
                 int bottom = worldMap[currentTilePosX, yLess];
-                bottom = CheckIfSameId(bottom, currentId) ? bottom : 0;
+                // bottom = CheckIfSameId(bottom, currentId) ? bottom : 0;
                 mask += bottom > 0 ? 16 : 0;
             }
 
             if (xLess > -1) {
                 int left = worldMap[xLess, currentTilePosY];
-                left = CheckIfSameId(left, currentId) ? left : 0;
+                // left = CheckIfSameId(left, currentId) ? left : 0;
                 mask += left > 0 ? 64 : 0;
 
                 if (yLess > -1) {
                     int diagBottomLeft = worldMap[xLess, yLess];
-                    diagBottomLeft = CheckIfSameId(diagBottomLeft, currentId) ? diagBottomLeft : 0;
+                    // diagBottomLeft = CheckIfSameId(diagBottomLeft, currentId) ? diagBottomLeft : 0;
                     mask += diagBottomLeft > 0 ? 32 : 0;
                 }
 
                 if (yMore <= yLength) {
                     int diagTopLeft = worldMap[xLess, yMore];
-                    diagTopLeft = CheckIfSameId(diagTopLeft, currentId) ? diagTopLeft : 0;
+                    // diagTopLeft = CheckIfSameId(diagTopLeft, currentId) ? diagTopLeft : 0;
                     mask += diagTopLeft > 0 ? 128 : 0;
                 }
             }

@@ -26,14 +26,6 @@ public class Chunk : MonoBehaviour {
     private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
     private bool firstInitialisation = true;
 
-    private void SetTilemap() {
-        // toDo améliorer ça en utilisant le name
-        Tilemap[] tilemaps = gameObject.GetComponentsInChildren<Tilemap>();
-        tilemap = tilemaps[0];
-        tilemapWall = tilemaps[1];
-        tilemapShadow = tilemaps[2];
-    }
-
     private void OnEnable() {
         // tilesMapArray = ;
         indexXWorldPos = indexX * chunkSize;
@@ -41,10 +33,16 @@ public class Chunk : MonoBehaviour {
         if (!firstInitialisation) {
             RefreshTiles();
             StartCoroutine(CheckPlayerPos());
-        } else {
-            SetTilemap();
         }
     }
+
+    public void RefreshChunck() {
+        indexXWorldPos = indexX * chunkSize;
+        indexYWorldPos = indexY * chunkSize;
+        RefreshTiles();
+        StartCoroutine(CheckPlayerPos());
+    }
+
     private void Update() {
         var intensity = cycleDay.GetIntensity();
         if (intensity != lastIntensity) {
@@ -88,8 +86,8 @@ public class Chunk : MonoBehaviour {
             }
         }
         tilemap.SetTiles(positions, tileArray);
-        tilemapShadow.SetTiles(positions, tileArrayShadow);
-        tilemapWall.SetTiles(positions, tileArrayWall);
+        //tilemapShadow.SetTiles(positions, tileArrayShadow);
+        //tilemapWall.SetTiles(positions, tileArrayWall);
         InitTilesMap();
     }
     private void InitTilesMap() {
@@ -100,9 +98,9 @@ public class Chunk : MonoBehaviour {
         }
     }
     void Start() {
-        StartCoroutine(CheckPlayerPos());
+        /*StartCoroutine(CheckPlayerPos());
         RefreshTiles();
-        firstInitialisation = false;
+        firstInitialisation = false;*/
     }
 
     private IEnumerator CheckPlayerPos() {

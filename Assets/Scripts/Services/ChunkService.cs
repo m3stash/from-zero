@@ -107,7 +107,7 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
     public void InitialiseChunkPooling() {
         for (var i = 0; i < numberOfPool; i++) {
             GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
-            chunk.gameObject.SetActive(false);
+            // chunk.gameObject.SetActive(false);
             chunk.transform.parent = worldMapTransform;
             /*Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
             Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
@@ -148,6 +148,7 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
         ck.player = player;
         ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!!
         Tilemap[] tilemaps = chunkGo.GetComponentsInChildren<Tilemap>();
+        // toDO virrer toute cette merde !!!!!!!!!!!!!!!!!
         tilemaps[0].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
         tilemaps[1].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
         tilemaps[0].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
@@ -158,7 +159,8 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
         ck.tileMapScript.tilePosY = chunkPosY * chunkSize;*/
         ck.indexX = chunkPosX;
         ck.indexY = chunkPosY;
-        ck.gameObject.SetActive(true);
+        // ck.gameObject.SetActive(true);
+        ck.RefreshChunck();
     }
     private void PlayerIsTooFar(Chunk ck) {
         var i = 0;
@@ -171,7 +173,7 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
             i++;
         });
         if (findIndex != -1) {
-            ck.gameObject.SetActive(false);
+            // ck.gameObject.SetActive(false);
             unUsedChunk.Add(usedChunk[findIndex]);
             usedChunk.RemoveAt(findIndex);
         }
@@ -180,9 +182,9 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
         return usedChunk.Find(chunk => chunk.indexX == x && chunk.indexY == y);
     }
     private void PlayerChunkEnter(Vector3 playerPos) {
-        StartCoroutine(StartPool(playerPos));
+        StartPool(playerPos);
     }
-    private IEnumerator StartPool(Vector3 playerPos) {
+    private void StartPool(Vector3 playerPos) {
         var diff = 4;
         // ToDO voir a ne le faire que si top bottom left et right > 0 et < length
         var chunkIndexX = (int)playerPos.x / chunkSize;
@@ -198,68 +200,56 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
                 // diag bottom right
                 if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
                     ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
                 if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY - 1)) {
                     ManageChunkFromPool(chunkIndexX + 1, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
             }
             if (top) {
                 // diag top right 
                 if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
                     ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
                 if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY + 1)) {
                     ManageChunkFromPool(chunkIndexX + 1, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
             }
             // only right
             if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY)) {
                 ManageChunkFromPool(chunkIndexX + 1, chunkIndexY);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
             }
         } else if (left && chunkIndexX - 1 >= 0) {
             if (bottom) {
                 // diag bottom left
                 if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
                     ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
                 if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY - 1)) {
                     ManageChunkFromPool(chunkIndexX - 1, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
             }
             if (top) {
                 // diag top left 
                 if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
                     ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
                 if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY + 1)) {
                     ManageChunkFromPool(chunkIndexX - 1, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
                 }
             }
             // only left
             if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY)) {
                 ManageChunkFromPool(chunkIndexX - 1, chunkIndexY);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
             }
         } else if (top && chunkIndexY + 1 <= boundY) {
             // only top
             if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
                 ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
             }
         } else if (bottom && chunkIndexY - 1 >= 0) {
             // only bottom
             if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
                 ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
             }
         }
     }

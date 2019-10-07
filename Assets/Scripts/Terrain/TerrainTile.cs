@@ -22,7 +22,7 @@ namespace UnityEngine.Tilemaps {
         private System.Random rand = new System.Random();
 
         // TODO a remettre et a revoir pour utiliser les positons de world et non de tilemap!
-        public override void RefreshTile(Vector3Int location, ITilemap tileMap) {
+        /*public override void RefreshTile(Vector3Int location, ITilemap tileMap) {
             for (int yd = -1; yd <= 1; yd++) {
                 for (int xd = -1; xd <= 1; xd++) {
                     Vector3Int position = new Vector3Int(location.x + xd, location.y + yd, location.z);
@@ -31,7 +31,7 @@ namespace UnityEngine.Tilemaps {
                     }
                 }
             }
-        }
+        }*/
 
         public override void GetTileData(Vector3Int location, ITilemap tileMap, ref TileData tileData) {
             UpdateTile(location, tileMap, ref tileData);

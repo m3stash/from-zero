@@ -295,7 +295,6 @@ MonoBehaviour:
   tilemapShadow: {fileID: 2004685544}
   player: {fileID: 0}
   cycleDay: {fileID: 0}
-  tileMapScript: {fileID: 0}
   indexX: 0
   indexY: 0
   indexXWorldPos: 0

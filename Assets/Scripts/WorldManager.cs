@@ -27,13 +27,16 @@ public class WorldManager : MonoBehaviour {
     public TileBase_cfg tilebase_cfg;
     public int chunkSize;
 
+    public delegate void ExampleEventHandler();
+    public static event ExampleEventHandler RefreshLight;
+
     void Start() {
         InitResources();
         CreateWorldMap();
         CreateLightMap();
         CreatePlayer();
         chunkService.Init(chunkSize, tilebaseDictionary, tilesWorldMap, tilesLightMap, player, cycleDay, lightService, tilesShadowMap);
-        lightService.Init(tilesWorldMap, tilesLightMap, wallTilesMap, tilesShadowMap, cycleDay);
+        lightService.Init(tilesWorldMap, tilesLightMap, wallTilesMap, tilesShadowMap);
     }
     private void InitResources() {
         cycleDay = gameObject.GetComponentInChildren<CycleDay>();
@@ -73,11 +76,13 @@ public class WorldManager : MonoBehaviour {
         tilesObjetMap[posX, posY] = go;
         if (id == 11) {
             lightService.RecursivAddNewLight(posX, posY, 0, tilesLightMap);
+            RefreshLight();
         }
     }
     public void DeleteItem(int posX, int posY) {
         if (tilesObjetMap[posX, posY].name == "item_11(Clone)") { // toDo changer cette merde
             lightService.RecursivDeleteLight(posX, posY, tilesLightMap, true);
+            RefreshLight();
         }
         tilesObjetMap[posX, posY] = null;
         Destroy(tilesObjetMap[posX, posY]);
@@ -88,6 +93,7 @@ public class WorldManager : MonoBehaviour {
         Chunk currentChunk = ManageChunkTile(x, y, 0);
         currentChunk.SetTile(new Vector3Int(x % chunkSize, y % chunkSize, 0), null);
         lightService.RecursivDeleteShadow(x, y, tilesLightMap);
+        RefreshLight();
         ManageItems.CreateItemOnMap(x, y, id);
         RefreshChunkNeightboorTiles(x, y, currentChunk.tilemap);
     }
@@ -95,6 +101,7 @@ public class WorldManager : MonoBehaviour {
         Chunk currentChunk = ManageChunkTile(x, y, id);
         currentChunk.SetTile(new Vector3Int(x % chunkSize, y % chunkSize, 0), tilebaseDictionary[id]);
         lightService.RecursivAddShadow(x, y, tilesLightMap);
+        RefreshLight();
         RefreshChunkNeightboorTiles(x, y, currentChunk.tilemap);
     }
     private Chunk ManageChunkTile(int x, int y, int id) {

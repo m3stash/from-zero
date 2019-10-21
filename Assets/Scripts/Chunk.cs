@@ -26,32 +26,34 @@ public class Chunk : MonoBehaviour {
     private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
     private bool firstInitialisation = true;
 
-    private void SetTilemap() {
-        // toDo améliorer ça en utilisant le name
-        Tilemap[] tilemaps = gameObject.GetComponentsInChildren<Tilemap>();
-        tilemap = tilemaps[0];
-        tilemapWall = tilemaps[1];
-        tilemapShadow = tilemaps[2];
-    }
-
     private void OnEnable() {
-        // tilesMapArray = ;
         indexXWorldPos = indexX * chunkSize;
         indexYWorldPos = indexY * chunkSize;
         if (!firstInitialisation) {
             RefreshTiles();
             StartCoroutine(CheckPlayerPos());
-        } else {
-            SetTilemap();
         }
     }
     private void Update() {
         var intensity = cycleDay.GetIntensity();
         if (intensity != lastIntensity) {
             lastIntensity = intensity;
-            for (var x = indexXWorldPos; x < indexXWorldPos + chunkSize; x++) {
-                for (var y = indexYWorldPos; y < indexYWorldPos + chunkSize; y++) {
-                    lightService.SetTilemapOpacity(tilesShadowMap, tilesLightMap, x, y);
+            this.RefreshShadowMap();
+        }
+    }
+    private void RefreshShadowMap() {
+        for (var x = 0; x < chunkSize; x++) {
+            for (var y = 0; y < chunkSize; y++) {
+                var shadow = tilesShadowMap[indexXWorldPos + x, indexYWorldPos + y] + cycleDay.GetIntensity();
+                var light = tilesLightMap[indexXWorldPos + x, indexYWorldPos + y];
+                if ((wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0 && wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0) || (shadow == 0 && light == 0)) {
+                    tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
+                } else {
+                    if (light <= shadow && light < 1) {
+                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, light));
+                    } else {
+                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, shadow));
+                    }
                 }
             }
         }
@@ -100,6 +102,7 @@ public class Chunk : MonoBehaviour {
         }
     }
     void Start() {
+        WorldManager.RefreshLight += RefreshShadowMap;
         StartCoroutine(CheckPlayerPos());
         RefreshTiles();
         firstInitialisation = false;

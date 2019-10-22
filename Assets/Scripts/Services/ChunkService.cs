@@ -23,6 +23,12 @@ public class ChunkService : MonoBehaviour {
     private int boundY; 
     private LightService lightService;
     private float[,] tilesShadowMap;
+    private int currentPlayerChunkX;
+    private int currentPlayerChunkY;
+    private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
+
+    public delegate void PlayerPositionEventHandler();
+    public static event PlayerPositionEventHandler RefreshPosition;
     //      O | O | O
     //      O | # | O  => # = perso on int array
     //      O | O | O
@@ -77,11 +83,6 @@ public class ChunkService : MonoBehaviour {
         chunk.transform.parent = worldMapTransform;
         Chunk ck = chunk.GetComponent<Chunk>();
         Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
-        /*Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
-        TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();*/
-        /*ck.tileMapScript = tileMapScript;
-ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
-        // ck.tilemap = tilemap;
 
         ck.cycleDay = cycleDay;
         ck.tilesLightMap = tilesLightMap;
@@ -92,29 +93,12 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
         ck.tilebaseDictionary = tilebaseDictionary;
         ck.indexX = 0;
         ck.indexY = 0;
-
-        /*for (var x = 0; x < 1024; x++) {
-            for (var y = 0; y < 1024; y++) {
-                int tileIndex = tilesWorldMap[x, y];
-                if (tileIndex > 0) {
-                    tilemap.SetTile(new Vector3Int(x, y, 0), tilebaseDictionary[tileIndex]);
-                } else {
-                    tilemap.SetTile(new Vector3Int(x, y, 0), null);
-                }
-            }
-        }*/
     }
     public void InitialiseChunkPooling() {
         for (var i = 0; i < numberOfPool; i++) {
             GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
             chunk.gameObject.SetActive(false);
             chunk.transform.parent = worldMapTransform;
-            /*Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
-            Tilemap tilemap = chunk.GetComponentInChildren<Tilemap>();
-            TileMapScript tileMapScript = tilemap.GetComponent<TileMapScript>();*/
-            // ck.tilemap = tilemap;
-            /*ck.tileMapScript = tileMapScript;
-          ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
             Chunk ck = chunk.GetComponent<Chunk>();
             ck.cycleDay = cycleDay;
             ck.tilesLightMap = tilesLightMap;
@@ -148,6 +132,7 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
         ck.player = player;
         ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!!
         Tilemap[] tilemaps = chunkGo.GetComponentsInChildren<Tilemap>();
+        // toDo refacto tout ça => just a POC !
         tilemaps[0].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
         tilemaps[1].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
         tilemaps[0].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
@@ -178,6 +163,20 @@ ck.tileMapScript.tilesWorldMap = tilesWorldMap;*/
     }
     private bool ChunkAlreadyCreate(int x, int y) {
         return usedChunk.Find(chunk => chunk.indexX == x && chunk.indexY == y);
+    }
+    public void SendPlayerPosition(Vector3 playerPos) {
+        var playerChunkX = (int)playerPos.x / chunkSize;
+        var playerChunkY = (int)playerPos.y / chunkSize;
+        if(currentPlayerChunkX == playerChunkX && currentPlayerChunkY == playerChunkY) {
+            /*if (Mathf.Abs(currentPlayerChunkX - playerChunkX) >= chunkGapWithPlayer || Mathf.Abs(currentPlayerChunkY - playerChunkY) >= chunkGapWithPlayer) {
+                Debug.Log("TROLOLO");
+                // SendMessageUpwards("PlayerIsTooFar", this);
+            }*/
+        } else {
+            currentPlayerChunkX = playerChunkX;
+            currentPlayerChunkY = playerChunkY;
+            Debug.Log("PLAYER ENTER");
+        }
     }
     private void PlayerChunkEnter(Vector3 playerPos) {
         StartCoroutine(StartPool(playerPos));

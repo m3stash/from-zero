@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
-
     private float speed = 10f;
     [SerializeField]
     private readonly float jumpForces = 200f;
@@ -21,6 +20,7 @@ public class Player : MonoBehaviour {
     /*public Color colorStart = Color.black;
     public Color colorEnd = Color.white;
     public float duration = 1.0F;*/
+    public ChunkService chunkService;
 
     void Start() {
 
@@ -34,8 +34,6 @@ public class Player : MonoBehaviour {
             toolbar.AddItem(collision.gameObject);
         }
     }
-
-
 
     void FixedUpdate() {
         float moveHorizontal = Input.GetAxis("Horizontal");
@@ -75,6 +73,8 @@ public class Player : MonoBehaviour {
         if (rg2d.velocity.x < -speed) {
             rg2d.velocity = new Vector2(-speed, rg2d.velocity.y);
         }
+
+        chunkService.SendPlayerPosition(transform.position);
 
     }
 

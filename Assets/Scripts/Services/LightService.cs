@@ -7,25 +7,27 @@ public class LightService : MonoBehaviour {
     private int[,] tilesWorldMap;
     private float[,] tilesShadowMap;
     private int[,] wallTilesMap;
+    private float[,] tilesLightMap;
 
-    public void Init(int[,] _tilesWorldMap, float[,] _tilesLightMap, int[,] _wallTilesMap, float[,] _tilesShadowMap) {
-        tilesWorldMap = _tilesWorldMap;
-        wallTilesMap = _wallTilesMap;
-        tilesShadowMap = _tilesShadowMap;
+    public void Init(int[,] tilesWorldMap, float[,] tilesLightMap, int[,] wallTilesMap, float[,] tilesShadowMap) {
+        this.tilesWorldMap = tilesWorldMap;
+        this.wallTilesMap = wallTilesMap;
+        this.tilesShadowMap = tilesShadowMap;
+        this.tilesLightMap = tilesLightMap;
     }
-    public void RecursivAddNewLight(int x, int y, float lastLight, float[,] tilesLightMap) {
+    public void RecursivAddNewLight(int x, int y, float lastLight) {
         if (IsOutOfBound(x, y))
             return;
         float newLight = GetAmountLight(tilesWorldMap[x, y], wallTilesMap[x, y], lastLight);
         if ((newLight >= tilesLightMap[x, y]) || newLight >= 1)
             return;
         tilesLightMap[x, y] = newLight;
-        RecursivAddNewLight(x + 1, y, newLight, tilesLightMap);
-        RecursivAddNewLight(x, y + 1, newLight, tilesLightMap);
-        RecursivAddNewLight(x - 1, y, newLight, tilesLightMap);
-        RecursivAddNewLight(x, y - 1, newLight, tilesLightMap);
+        RecursivAddNewLight(x + 1, y, newLight);
+        RecursivAddNewLight(x, y + 1, newLight);
+        RecursivAddNewLight(x - 1, y, newLight);
+        RecursivAddNewLight(x, y - 1, newLight);
     }
-    public void RecursivDeleteShadow(int x, int y, float[,] tilesLightMap) {
+    public void RecursivDeleteShadow(int x, int y) {
         if (IsOutOfBound(x, y))
             return;
         var wallTileMap = wallTilesMap[x, y];
@@ -44,12 +46,12 @@ public class LightService : MonoBehaviour {
         if (newLight < tileLightMap) {
             tilesLightMap[x, y] = newLight;
         }
-        RecursivDeleteShadow(x + 1, y, tilesLightMap);
-        RecursivDeleteShadow(x, y + 1, tilesLightMap);
-        RecursivDeleteShadow(x - 1, y, tilesLightMap);
-        RecursivDeleteShadow(x, y - 1, tilesLightMap);
+        RecursivDeleteShadow(x + 1, y);
+        RecursivDeleteShadow(x, y + 1);
+        RecursivDeleteShadow(x - 1, y);
+        RecursivDeleteShadow(x, y - 1);
     }
-    public void RecursivDeleteLight(int x, int y, float[,] tilesLightMap, bool toDelete) {
+    public void RecursivDeleteLight(int x, int y, bool toDelete) {
         if (IsOutOfBound(x, y))
             return;
         var minLight = GetNeightboorMinOrMaxOpacity(tilesLightMap, x, y, false);
@@ -57,12 +59,12 @@ public class LightService : MonoBehaviour {
         if (newLight <= tilesLightMap[x, y] && !toDelete || !toDelete && tilesLightMap[x, y] == 0.15f || newLight > 1)
             return;
         tilesLightMap[x, y] = newLight;
-        RecursivDeleteLight(x + 1, y, tilesLightMap, false);
-        RecursivDeleteLight(x, y + 1, tilesLightMap, false);
-        RecursivDeleteLight(x - 1, y, tilesLightMap, false);
-        RecursivDeleteLight(x, y - 1, tilesLightMap, false);
+        RecursivDeleteLight(x + 1, y, false);
+        RecursivDeleteLight(x, y + 1, false);
+        RecursivDeleteLight(x - 1, y, false);
+        RecursivDeleteLight(x, y - 1, false);
     }
-    public void RecursivAddShadow(int x, int y, float[,] tilesLightMap) {
+    public void RecursivAddShadow(int x, int y) {
         var tileWorldMap = tilesWorldMap[x, y];
         var wallTileMap = wallTilesMap[x, y];
         var tileLightMap = tilesLightMap[x, y];
@@ -81,10 +83,10 @@ public class LightService : MonoBehaviour {
         if (newLight > tileLightMap) {
             tilesLightMap[x, y] = newLight;
         }
-        RecursivAddShadow(x + 1, y, tilesLightMap);
-        RecursivAddShadow(x, y + 1, tilesLightMap);
-        RecursivAddShadow(x - 1, y, tilesLightMap);
-        RecursivAddShadow(x, y - 1, tilesLightMap);
+        RecursivAddShadow(x + 1, y);
+        RecursivAddShadow(x, y + 1);
+        RecursivAddShadow(x - 1, y);
+        RecursivAddShadow(x, y - 1);
     }
     private float GetNeightboorMinOrMaxOpacity(float[,] map, int x, int y, bool isMax) {
         var t = IsOutOfBoundMap(x, y + 1, map) ? 1 : map[x, y + 1];

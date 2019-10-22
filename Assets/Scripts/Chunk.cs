@@ -27,6 +27,7 @@ public class Chunk : MonoBehaviour {
     private bool firstInitialisation = true;
 
     private void OnEnable() {
+        WorldManager.RefreshLight += RefreshShadowMap;
         indexXWorldPos = indexX * chunkSize;
         indexYWorldPos = indexY * chunkSize;
         if (!firstInitialisation) {
@@ -59,6 +60,7 @@ public class Chunk : MonoBehaviour {
         }
     }
     private void OnDisable() {
+        WorldManager.RefreshLight -= RefreshShadowMap;
         DeleteTileMapsTiles();
     }
     private void DeleteTileMapsTiles() {
@@ -102,7 +104,6 @@ public class Chunk : MonoBehaviour {
         }
     }
     void Start() {
-        WorldManager.RefreshLight += RefreshShadowMap;
         StartCoroutine(CheckPlayerPos());
         RefreshTiles();
         firstInitialisation = false;
@@ -116,6 +117,7 @@ public class Chunk : MonoBehaviour {
             if (currentPlayerChunkX == indexX && currentPlayerChunkY == indexY) {
                 SendMessageUpwards("PlayerChunkEnter", playerPos);
             } else if (Mathf.Abs(currentPlayerChunkX - indexX) >= chunkGapWithPlayer || Mathf.Abs(currentPlayerChunkY - indexY) >= chunkGapWithPlayer) {
+                // voir pour envoyer un event ici
                 SendMessageUpwards("PlayerIsTooFar", this);
             }
             yield return new WaitForSeconds(0.3f);

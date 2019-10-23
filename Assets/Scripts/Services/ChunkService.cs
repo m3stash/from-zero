@@ -15,25 +15,33 @@ public class ChunkService : MonoBehaviour {
     private CycleDay cycleDay;
     private Dictionary<int, TileBase> tilebaseDictionary;
     private Transform worldMapTransform;
-    private float waitingTimeAfterCreateChunk = 0.1f;
+    private float waitingTimeAfterCreateChunk = 0.3f;
     private List<Chunk> unUsedChunk = new List<Chunk>();
     private List<Chunk> usedChunk = new List<Chunk>();
     private int halfChunk;
     private int boundX;
-    private int boundY; 
+    private int boundY;
     private LightService lightService;
     private float[,] tilesShadowMap;
     private int currentPlayerChunkX;
     private int currentPlayerChunkY;
-    private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
+    private readonly int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
 
-    public delegate void PlayerPositionEventHandler();
-    public static event PlayerPositionEventHandler RefreshPosition;
     //      O | O | O
     //      O | # | O  => # = perso on int array
     //      O | O | O
     private int chunkXLength;
     private int chunkYLength;
+
+    public void FixedUpdate() {
+        currentPlayerChunkX = (int)player.transform.position.x / chunkSize;
+        currentPlayerChunkY = (int)player.transform.position.y / chunkSize;
+        var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= chunkGapWithPlayer || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= chunkGapWithPlayer);
+        chuncksToDesactivate.ForEach(chunk => {
+            PlayerIsTooFar(chunk);
+        });
+        StartCoroutine(StartPool(player.transform.position));
+    }
     public void SetWallMap(int[,] map) {
         wallTilesMap = map;
     }
@@ -111,7 +119,7 @@ public class ChunkService : MonoBehaviour {
             ck.indexX = -1;
             ck.indexY = -1;
             unUsedChunk.Add(ck);
-            
+
         }
     }
     public void CreatePoolChunk(int xStart, int yStart) {
@@ -121,7 +129,7 @@ public class ChunkService : MonoBehaviour {
         player.transform.position = new Vector3(xStart * chunkSize + (chunkSize / 2), yStart * chunkSize + (chunkSize / 6), 0);
     }
     private void ManageChunkFromPool(int chunkPosX, int chunkPosY) {
-        if(unUsedChunk.Count == 0) {
+        if (unUsedChunk.Count == 0) {
             Debug.Log("ATTENTION pool vide !!!!!!!!!!!"); // ToDo => voir le pb de la pool de 20 !
         }
         usedChunk.Add(unUsedChunk[0]);
@@ -163,23 +171,6 @@ public class ChunkService : MonoBehaviour {
     }
     private bool ChunkAlreadyCreate(int x, int y) {
         return usedChunk.Find(chunk => chunk.indexX == x && chunk.indexY == y);
-    }
-    public void SendPlayerPosition(Vector3 playerPos) {
-        var playerChunkX = (int)playerPos.x / chunkSize;
-        var playerChunkY = (int)playerPos.y / chunkSize;
-        if(currentPlayerChunkX == playerChunkX && currentPlayerChunkY == playerChunkY) {
-            /*if (Mathf.Abs(currentPlayerChunkX - playerChunkX) >= chunkGapWithPlayer || Mathf.Abs(currentPlayerChunkY - playerChunkY) >= chunkGapWithPlayer) {
-                Debug.Log("TROLOLO");
-                // SendMessageUpwards("PlayerIsTooFar", this);
-            }*/
-        } else {
-            currentPlayerChunkX = playerChunkX;
-            currentPlayerChunkY = playerChunkY;
-            Debug.Log("PLAYER ENTER");
-        }
-    }
-    private void PlayerChunkEnter(Vector3 playerPos) {
-        StartCoroutine(StartPool(playerPos));
     }
     private IEnumerator StartPool(Vector3 playerPos) {
         var diff = 4;

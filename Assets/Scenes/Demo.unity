@@ -3469,7 +3469,7 @@ PrefabInstance:
     - target: {fileID: 3346800735364998950, guid: 41de9baee7b18384084a60e85753b5a1,
         type: 3}
       propertyPath: chunkSize
-      value: 64
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 938428963, guid: 41de9baee7b18384084a60e85753b5a1, type: 3}
       propertyPath: m_Mode

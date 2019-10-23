@@ -23,8 +23,9 @@ public class Chunk : MonoBehaviour {
     public int indexYWorldPos;
     public int chunkSize;
     public LightService lightService;
-    private int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
     private bool firstInitialisation = true;
+    private bool isShapesCreated = false;
+    private BoxCollider2D bc2d;
 
     private void OnEnable() {
         WorldManager.RefreshLight += RefreshShadowMap;
@@ -32,7 +33,6 @@ public class Chunk : MonoBehaviour {
         indexYWorldPos = indexY * chunkSize;
         if (!firstInitialisation) {
             RefreshTiles();
-            StartCoroutine(CheckPlayerPos());
         }
     }
     private void Update() {
@@ -60,6 +60,7 @@ public class Chunk : MonoBehaviour {
         }
     }
     private void OnDisable() {
+        isShapesCreated = false;
         WorldManager.RefreshLight -= RefreshShadowMap;
         DeleteTileMapsTiles();
     }
@@ -77,24 +78,26 @@ public class Chunk : MonoBehaviour {
         TileBase[] tileArrayShadow = new TileBase[positions.Length];
         TileBase[] tileArrayWall = new TileBase[positions.Length];
         for (int index = 0; index < positions.Length; index++) {
-            var a = index % chunkSize;
-            var b = index / chunkSize;
-            var xx = (index % chunkSize) + indexXWorldPos;
-            var yy = (index / chunkSize) + indexYWorldPos;
-            positions[index] = new Vector3Int(a, b, 0);
-            var tileBaseIndex = tilesMap[a, b];
+            var x = index % chunkSize;
+            var y = index / chunkSize;
+            positions[index] = new Vector3Int(x, y, 0);
+            var tileBaseIndex = tilesMap[x, y];
             if (tileBaseIndex > 0) {
                 tileArray[index] = tilebaseDictionary[tileBaseIndex];
+            } else {
+                tileArray[index] = null;
             }
             tileArrayShadow[index] = tilebaseDictionary[-1];
-            if (wallTilesMap[xx, yy] > 0) {
+            if (wallTilesMap[x + indexXWorldPos, y + indexYWorldPos] > 0) {
                 tileArrayWall[index] = tilebaseDictionary[7];
+            } else {
+                tileArrayWall[index] = null;
             }
         }
         tilemap.SetTiles(positions, tileArray);
         tilemapShadow.SetTiles(positions, tileArrayShadow);
         tilemapWall.SetTiles(positions, tileArrayWall);
-        InitTilesMap();
+        // InitTilesMap();
     }
     private void InitTilesMap() {
         for (var x = 0; x < chunkSize; x++) {
@@ -104,33 +107,24 @@ public class Chunk : MonoBehaviour {
         }
     }
     void Start() {
-        StartCoroutine(CheckPlayerPos());
+        var bc2d = GetComponentInChildren<BoxCollider2D>();
+        bc2d.offset = new Vector2(chunkSize / 2, chunkSize / 2);
+        bc2d.size = new Vector2(chunkSize, chunkSize);
+        GetComponentInChildren<TilemapCollider2D>().enabled = false;
         RefreshTiles();
         firstInitialisation = false;
     }
-
-    private IEnumerator CheckPlayerPos() {
-        while (true) {
-            var playerPos = player.gameObject.transform.position;
-            var currentPlayerChunkX = (int)playerPos.x / chunkSize;
-            var currentPlayerChunkY = (int)playerPos.y / chunkSize;
-            if (currentPlayerChunkX == indexX && currentPlayerChunkY == indexY) {
-                SendMessageUpwards("PlayerChunkEnter", playerPos);
-            } else if (Mathf.Abs(currentPlayerChunkX - indexX) >= chunkGapWithPlayer || Mathf.Abs(currentPlayerChunkY - indexY) >= chunkGapWithPlayer) {
-                // voir pour envoyer un event ici
-                SendMessageUpwards("PlayerIsTooFar", this);
-            }
-            yield return new WaitForSeconds(0.3f);
-        }
-    }
-
     public void SetTile(Vector3Int vector3, TileBase tilebase) {
         tilemap.SetTile(vector3, tilebase);
     }
-
-
     public void RefreshTile(Vector3Int vector3) {
         tilemap.RefreshTile(vector3);
     }
-
+    public void ChunckVisible() {
+        if (!isShapesCreated) {
+            GetComponentInChildren<TilemapCollider2D>().enabled = true;
+            Debug.Log("ooooooooooooooooooui");
+            isShapesCreated = true;
+        }
+    }
 }

@@ -20,7 +20,6 @@ public class Player : MonoBehaviour {
     /*public Color colorStart = Color.black;
     public Color colorEnd = Color.white;
     public float duration = 1.0F;*/
-    public ChunkService chunkService;
 
     void Start() {
 
@@ -73,8 +72,6 @@ public class Player : MonoBehaviour {
         if (rg2d.velocity.x < -speed) {
             rg2d.velocity = new Vector2(-speed, rg2d.velocity.y);
         }
-
-        chunkService.SendPlayerPosition(transform.position);
 
     }
 

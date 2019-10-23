@@ -67,7 +67,6 @@ public class WorldManager : MonoBehaviour {
     }
     private void CreatePlayer() {
         player = Instantiate((GameObject)Resources.Load("Prefabs/Characters/Player/Player"), new Vector3(0, 0, 0), transform.rotation);
-        player.gameObject.GetComponent<Player>().chunkService = chunkService;
         tile_selector.GetComponent<TileSelector>().Init(player, this, wallTilesMap, tilesWorldMap, tilesObjetMap);
     }
     public void AddItem(int posX, int posY, InventoryItem item) {

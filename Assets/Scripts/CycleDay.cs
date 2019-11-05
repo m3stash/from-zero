@@ -26,7 +26,8 @@ public class CycleDay : MonoBehaviour {
         StartCoroutine(DayNightCicle());
     }
     public float GetIntensity() {
-        return intensity;
+        // return intensity;
+        return 0;
     }
     public void ConvertTime() {
         int durationOnSecond = durationDayOnMinute * 60;

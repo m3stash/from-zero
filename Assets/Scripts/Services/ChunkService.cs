@@ -64,8 +64,8 @@ public class ChunkService : MonoBehaviour {
         cycleDay = _cycleDay;
         lightService = _lightService;
         tilesShadowMap = _tilesShadowMap;
-        // CreatePoolChunk(6, 25); // cas pour 32 tiles
-        CreatePoolChunk(3, 13); // cas pour 64 tiles
+        CreatePoolChunk(6, 26); // cas pour 32 tiles
+        // CreatePoolChunk(3, 13); // cas pour 64 tiles
         // RenderPartialMapForTest(); // for debug map
     }
     public void CreateChunksFromMaps(int[,] tilesMap, int chunkSize) {
@@ -97,7 +97,7 @@ public class ChunkService : MonoBehaviour {
         ck.wallTilesMap = wallTilesMap;
         ck.lightService = lightService;
         ck.tilesShadowMap = tilesShadowMap;
-        ck.chunkSize = 64;
+        ck.chunkSize = chunkSize;
         ck.tilebaseDictionary = tilebaseDictionary;
         ck.indexX = 0;
         ck.indexY = 0;
@@ -119,7 +119,6 @@ public class ChunkService : MonoBehaviour {
             ck.indexX = -1;
             ck.indexY = -1;
             unUsedChunk.Add(ck);
-
         }
     }
     public void CreatePoolChunk(int xStart, int yStart) {
@@ -141,17 +140,19 @@ public class ChunkService : MonoBehaviour {
         ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!!
         Tilemap[] tilemaps = chunkGo.GetComponentsInChildren<Tilemap>();
         // toDo refacto tout ça => just a POC !
-        tilemaps[0].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
-        tilemaps[1].GetComponent<TileMapScript>().tilePosX = chunkPosX * chunkSize;
-        tilemaps[0].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
-        tilemaps[1].GetComponent<TileMapScript>().tilePosY = chunkPosY * chunkSize;
-        tilemaps[0].GetComponent<TileMapScript>().tilesWorldMap = tilesWorldMap;
-        tilemaps[1].GetComponent<TileMapScript>().tilesWorldMap = tilesWorldMap;
+        var tilemap = tilemaps[0].GetComponent<TileMapScript>();
+        var wallmap = tilemaps[1].GetComponent<TileMapScript>();
+        tilemap.tilePosX = chunkPosX * chunkSize;
+        wallmap.tilePosX = chunkPosX * chunkSize;
+        tilemap.tilePosY = chunkPosY * chunkSize;
+        wallmap.tilePosY = chunkPosY * chunkSize;
+        tilemap.tilesWorldMap = tilesWorldMap;
+        wallmap.tilesWorldMap = tilesWorldMap;
         /*ck.tileMapScript.tilePosX = chunkPosX * chunkSize;
         ck.tileMapScript.tilePosY = chunkPosY * chunkSize;*/
         ck.indexX = chunkPosX;
         ck.indexY = chunkPosY;
-        ck.gameObject.SetActive(true);
+        chunkGo.SetActive(true);
     }
     private void PlayerIsTooFar(Chunk ck) {
         var i = 0;

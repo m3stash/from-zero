@@ -87,7 +87,11 @@ public class Chunk : MonoBehaviour {
             } else {
                 tileArray[index] = null;
             }
-            tileArrayShadow[index] = tilebaseDictionary[-1];
+            if(tilesShadowMap[x, y] > 0) {
+                tileArrayShadow[index] = tilebaseDictionary[-1];
+            } else {
+                tileArrayShadow[index] = null;
+            }
             if (wallTilesMap[x + indexXWorldPos, y + indexYWorldPos] > 0) {
                 tileArrayWall[index] = tilebaseDictionary[7];
             } else {
@@ -97,22 +101,15 @@ public class Chunk : MonoBehaviour {
         tilemap.SetTiles(positions, tileArray);
         tilemapShadow.SetTiles(positions, tileArrayShadow);
         tilemapWall.SetTiles(positions, tileArrayWall);
-        // InitTilesMap();
-    }
-    private void InitTilesMap() {
-        for (var x = 0; x < chunkSize; x++) {
-            for (var y = 0; y < chunkSize; y++) {
-                tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, tilesShadowMap[indexXWorldPos + x, indexYWorldPos + y]));
-            }
-        }
+        this.RefreshShadowMap();
     }
     void Start() {
         var bc2d = GetComponentInChildren<BoxCollider2D>();
         bc2d.offset = new Vector2(chunkSize / 2, chunkSize / 2);
         bc2d.size = new Vector2(chunkSize, chunkSize);
         GetComponentInChildren<TilemapCollider2D>().enabled = false;
-        RefreshTiles();
         firstInitialisation = false;
+        RefreshTiles();
     }
     public void SetTile(Vector3Int vector3, TileBase tilebase) {
         tilemap.SetTile(vector3, tilebase);

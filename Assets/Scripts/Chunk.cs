@@ -5,47 +5,41 @@ using UnityEngine.Tilemaps;
 
 public class Chunk : MonoBehaviour {
 
-    private float lastIntensity = -1;
-    public Tilemap tilemap;
+    public LightService lightService;
+    private TilemapCollider2D tc2d;
+    public TileMapScript tileMapTileMapScript;
+    public TileMapScript wallTileMapScript;
+    public Tilemap tilemapTile;
     public Tilemap tilemapWall;
     public Tilemap tilemapShadow;
     public int[,] wallTilesMap;
     public int[,] tilesMap;
-    public GameObject[,] tilesObjetMap;
     public float[,] tilesLightMap;
     public float[,] tilesShadowMap;
+    public GameObject[,] tilesObjetMap;
     public GameObject player;
-    public CycleDay cycleDay;
     public Dictionary<int, TileBase> tilebaseDictionary;
     public int indexX;
     public int indexY;
     public int indexXWorldPos;
     public int indexYWorldPos;
     public int chunkSize;
-    public LightService lightService;
     private bool firstInitialisation = true;
-    private bool isShapesCreated = false;
-    private BoxCollider2D bc2d;
+    private bool isChunkVisible = false;
+    private bool alreadyVisible = false;
 
     private void OnEnable() {
+        CycleDay.RefreshIntensity += RefreshShadowMap;
         WorldManager.RefreshLight += RefreshShadowMap;
-        indexXWorldPos = indexX * chunkSize;
-        indexYWorldPos = indexY * chunkSize;
         if (!firstInitialisation) {
             RefreshTiles();
         }
     }
-    private void Update() {
-        var intensity = cycleDay.GetIntensity();
-        if (intensity != lastIntensity) {
-            lastIntensity = intensity;
-            this.RefreshShadowMap();
-        }
-    }
-    private void RefreshShadowMap() {
+    private void RefreshShadowMap(float intensity) {
+        if (!isChunkVisible) return;
         for (var x = 0; x < chunkSize; x++) {
             for (var y = 0; y < chunkSize; y++) {
-                var shadow = tilesShadowMap[indexXWorldPos + x, indexYWorldPos + y] + cycleDay.GetIntensity();
+                var shadow = tilesShadowMap[indexXWorldPos + x, indexYWorldPos + y] + intensity;
                 var light = tilesLightMap[indexXWorldPos + x, indexYWorldPos + y];
                 if ((wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0 && wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0) || (shadow == 0 && light == 0)) {
                     tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
@@ -60,17 +54,9 @@ public class Chunk : MonoBehaviour {
         }
     }
     private void OnDisable() {
-        isShapesCreated = false;
+        alreadyVisible = false;
         WorldManager.RefreshLight -= RefreshShadowMap;
-        DeleteTileMapsTiles();
-    }
-    private void DeleteTileMapsTiles() {
-        for (var x = indexXWorldPos; x < indexXWorldPos + chunkSize; x++) {
-            for (var y = indexYWorldPos; y < indexYWorldPos + chunkSize; y++) {
-                tilemapShadow.SetTile(new Vector3Int(x, y, 0), null);
-                tilemapWall.SetTile(new Vector3Int(x, y, 0), null);
-            }
-        }
+        CycleDay.RefreshIntensity -= RefreshShadowMap;
     }
     private void RefreshTiles() {
         Vector3Int[] positions = new Vector3Int[chunkSize * chunkSize];
@@ -98,30 +84,37 @@ public class Chunk : MonoBehaviour {
                 tileArrayWall[index] = null;
             }
         }
-        tilemap.SetTiles(positions, tileArray);
+        tilemapTile.SetTiles(positions, tileArray);
         tilemapShadow.SetTiles(positions, tileArrayShadow);
         tilemapWall.SetTiles(positions, tileArrayWall);
-        this.RefreshShadowMap();
     }
     void Start() {
+        InitColliders();
+        firstInitialisation = false;
+        RefreshTiles();
+        tileMapTileMapScript.hasAlreadyInit = true;
+        wallTileMapScript.hasAlreadyInit = true;
+    }
+    private void InitColliders() {
+        tc2d = GetComponentInChildren<TilemapCollider2D>();
+        tc2d.enabled = false;
         var bc2d = GetComponentInChildren<BoxCollider2D>();
         bc2d.offset = new Vector2(chunkSize / 2, chunkSize / 2);
         bc2d.size = new Vector2(chunkSize, chunkSize);
-        GetComponentInChildren<TilemapCollider2D>().enabled = false;
-        firstInitialisation = false;
-        RefreshTiles();
     }
     public void SetTile(Vector3Int vector3, TileBase tilebase) {
-        tilemap.SetTile(vector3, tilebase);
+        tilemapTile.SetTile(vector3, tilebase);
     }
     public void RefreshTile(Vector3Int vector3) {
-        tilemap.RefreshTile(vector3);
+        tilemapTile.RefreshTile(vector3);
     }
-    public void ChunckVisible() {
-        if (!isShapesCreated) {
-            GetComponentInChildren<TilemapCollider2D>().enabled = true;
-            Debug.Log("ooooooooooooooooooui");
-            isShapesCreated = true;
+    public void ChunckVisible(bool isVisible) {
+        // to to rajouter un test pour ne plus passer par ici si le chunk est visible et a déjà été activé!!!!!!!!!!!!!!!!!!
+        isChunkVisible = isVisible;
+        if (isVisible && !alreadyVisible) {
+            alreadyVisible = true;
+            tc2d.enabled = true;
+            RefreshShadowMap(CycleDay.GetIntensity());
         }
     }
 }

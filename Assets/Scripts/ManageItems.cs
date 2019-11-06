@@ -43,6 +43,7 @@ public class ManageItems : MonoBehaviour {
 
     public void ManageDictionary(int id) {
         if (!itmCfgDict.ContainsKey(id)) {
+            // to do ajouter pool ici!
             itmCfgDict[id] = Instantiate(Resources.Load<Item_cfg>("Scriptables/Items/Item_" + id));
         }
     }

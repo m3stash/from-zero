@@ -1,24 +1,19 @@
 ﻿using UnityEngine;
 public class IsVisible : MonoBehaviour {
-    Renderer m_Renderer;
-    Chunk chunk;
-    Camera cam;
-    // Use this for initialization
+    private Renderer m_Renderer;
+    public Chunk chunk;
+    public Camera cam;
     void Start() {
         m_Renderer = GetComponent<Renderer>();
-        chunk = GetComponentInParent<Chunk>();
-        cam = chunk.player.GetComponentInChildren<Camera>();
     }
 
-    // Update is called once per frame
     void Update() {
         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(cam);
         if(GeometryUtility.TestPlanesAABB(planes, m_Renderer.bounds)) {
-            chunk.ChunckVisible();
+            chunk.ChunckVisible(true);
+        } else {
+            chunk.ChunckVisible(false);
         }
-        /*if (m_Renderer.isVisible) {
-            chunk.ChunckVisible();
-        }*/
     }
 
 }

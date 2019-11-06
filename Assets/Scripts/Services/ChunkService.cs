@@ -3,19 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+public class ChunkPos {
+    public int x;
+    public int y;
+    public ChunkPos(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
 public class ChunkService : MonoBehaviour {
 
     public int numberOfPool;
     private int chunkSize;
     private GameObject player;
+    private Camera playerCam;
     private int[,][,] tilesMapChunks;
     private float[,] tilesLightMap;
     private int[,] tilesWorldMap;
     private int[,] wallTilesMap;
-    private CycleDay cycleDay;
     private Dictionary<int, TileBase> tilebaseDictionary;
     private Transform worldMapTransform;
-    private float waitingTimeAfterCreateChunk = 0.3f;
+    private float waitingTimeAfterCreateChunk = 0.1f;
     private List<Chunk> unUsedChunk = new List<Chunk>();
     private List<Chunk> usedChunk = new List<Chunk>();
     private int halfChunk;
@@ -25,22 +34,27 @@ public class ChunkService : MonoBehaviour {
     private float[,] tilesShadowMap;
     private int currentPlayerChunkX;
     private int currentPlayerChunkY;
-    private readonly int chunkGapWithPlayer = 2; // gap between player and chunk befor unload it.
+    private readonly int maxChunkGapWithPlayerX = 6;
+    private readonly int maxChunkGapWithPlayerY = 4;
+    private string chunkDirectory = "chunk-data";
+    private ChunkDataModel[,] cacheChunkData;
 
-    //      O | O | O
-    //      O | # | O  => # = perso on int array
-    //      O | O | O
     private int chunkXLength;
     private int chunkYLength;
 
     public void FixedUpdate() {
+        ManageChunkPoolFromPlayerPos();
+    }
+    private void ManageChunkPoolFromPlayerPos() {
         currentPlayerChunkX = (int)player.transform.position.x / chunkSize;
         currentPlayerChunkY = (int)player.transform.position.y / chunkSize;
-        var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= chunkGapWithPlayer || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= chunkGapWithPlayer);
-        chuncksToDesactivate.ForEach(chunk => {
-            PlayerIsTooFar(chunk);
-        });
-        StartCoroutine(StartPool(player.transform.position));
+        var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= maxChunkGapWithPlayerX || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= maxChunkGapWithPlayerY);
+        chuncksToDesactivate.ForEach(chunk => PlayerIsTooFar(chunk));
+        // too voir a améliorer ça  !!!!
+        StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY));
+        StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY));
+        StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY - 1));
+        StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY + 1));
     }
     public void SetWallMap(int[,] map) {
         wallTilesMap = map;
@@ -51,22 +65,21 @@ public class ChunkService : MonoBehaviour {
     public Chunk GetChunk(int posX, int posY) {
         return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
     }
-    public void Init(int _chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] _tilesWorldMap, float[,] _tilesLightMap, GameObject _player, CycleDay _cycleDay, LightService _lightService, float[,] _tilesShadowMap) {
+    public void Init(int chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] tilesWorldMap, float[,] tilesLightMap, GameObject player, LightService lightService, float[,] tilesShadowMap) {
+        playerCam = player.GetComponentInChildren<Camera>();
         boundX = tilesMapChunks.GetUpperBound(0);
         boundY = tilesMapChunks.GetUpperBound(1);
-        halfChunk = _chunkSize / 2;
-        player = _player;
+        halfChunk = chunkSize / 2;
+        this.player = player;
         worldMapTransform = GameObject.FindGameObjectWithTag("WorldMap").gameObject.transform;
         tilebaseDictionary = _tilebaseDictionary;
-        tilesLightMap = _tilesLightMap;
-        tilesWorldMap = _tilesWorldMap;
-        chunkSize = _chunkSize;
-        cycleDay = _cycleDay;
-        lightService = _lightService;
-        tilesShadowMap = _tilesShadowMap;
-        CreatePoolChunk(6, 26); // cas pour 32 tiles
-        // CreatePoolChunk(3, 13); // cas pour 64 tiles
-        // RenderPartialMapForTest(); // for debug map
+        this.tilesLightMap = tilesLightMap;
+        this.tilesWorldMap = tilesWorldMap;
+        this.chunkSize = chunkSize;
+        this.lightService = lightService;
+        this.tilesShadowMap = tilesShadowMap;
+        cacheChunkData = new ChunkDataModel[boundX, boundY];
+        CreatePoolChunk(20, 51);
     }
     public void CreateChunksFromMaps(int[,] tilesMap, int chunkSize) {
         chunkXLength = (tilesMap.GetUpperBound(0) + 1) / chunkSize;
@@ -86,13 +99,10 @@ public class ChunkService : MonoBehaviour {
         tilesMapChunks = tilesMapChunksArray;
     }
     // for debug;
-    public void RenderPartialMapForTest() {
+    /*public void RenderPartialMapForTest() {
         GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
         chunk.transform.parent = worldMapTransform;
         Chunk ck = chunk.GetComponent<Chunk>();
-        Tilemap[] tilemaps = chunk.GetComponentsInChildren<Tilemap>();
-
-        ck.cycleDay = cycleDay;
         ck.tilesLightMap = tilesLightMap;
         ck.wallTilesMap = wallTilesMap;
         ck.lightService = lightService;
@@ -101,14 +111,18 @@ public class ChunkService : MonoBehaviour {
         ck.tilebaseDictionary = tilebaseDictionary;
         ck.indexX = 0;
         ck.indexY = 0;
-    }
+    }*/
     public void InitialiseChunkPooling() {
         for (var i = 0; i < numberOfPool; i++) {
             GameObject chunk = Instantiate((GameObject)Resources.Load("Prefabs/Chunk"), new Vector3(0, 0, 0), transform.rotation);
-            chunk.gameObject.SetActive(false);
             chunk.transform.parent = worldMapTransform;
             Chunk ck = chunk.GetComponent<Chunk>();
-            ck.cycleDay = cycleDay;
+            IsVisible isVisibleScript = ck.tilemapTile.GetComponent<IsVisible>();
+            isVisibleScript.cam = playerCam;
+            isVisibleScript.chunk = ck;
+            ck.tileMapTileMapScript = ck.tilemapTile.GetComponent<TileMapScript>();
+            ck.wallTileMapScript = ck.tilemapWall.GetComponent<TileMapScript>();
+            chunk.gameObject.SetActive(false);
             ck.tilesLightMap = tilesLightMap;
             ck.wallTilesMap = wallTilesMap;
             ck.chunkSize = chunkSize;
@@ -123,33 +137,49 @@ public class ChunkService : MonoBehaviour {
     }
     public void CreatePoolChunk(int xStart, int yStart) {
         InitialiseChunkPooling();
-        ManageChunkFromPool(xStart, yStart);
+        // voir à améliorer ça pour faire de l'auto calc sur la range
+        for (var x = xStart - 4; x < xStart + 5; x++) {
+            for (var y = yStart - 3; y < yStart + 3; y++) {
+                ManageChunkFromPool(x, y);
+            }
+        }
         // spawn player on center start chunk
         player.transform.position = new Vector3(xStart * chunkSize + (chunkSize / 2), yStart * chunkSize + (chunkSize / 6), 0);
     }
+    private ChunkDataModel GetChunkData(int PosX, int PosY) {
+        /*var chunkPath = "/" + chunkDirectory + "/" + "chunk_" + PosX + "_" + PosY;
+        var chunkData = FileManager.GetFile<ChunkDataModel>(chunkPath);
+        if (chunkData == null) {
+            var chunkDataModel = TileMapService.CreateChunkDataModel(PosX, PosY, tilesWorldMap, wallTilesMap, chunkSize);
+            // FileManager.Save(chunkDataModel, chunkPath);
+            return chunkDataModel;
+        } 
+        return chunkData;*/
+        /*if(cacheChunkData[PosX, PosY] == null) {
+            var chunkData = TileMapService.CreateChunkDataModel(PosX, PosY, tilesWorldMap, wallTilesMap, chunkSize);
+            return chunkData;
+        }
+        return cacheChunkData[PosX, PosY];*/
+        return TileMapService.CreateChunkDataModel(PosX, PosY, tilesWorldMap, wallTilesMap, chunkSize);
+    }
     private void ManageChunkFromPool(int chunkPosX, int chunkPosY) {
         if (unUsedChunk.Count == 0) {
-            Debug.Log("ATTENTION pool vide !!!!!!!!!!!"); // ToDo => voir le pb de la pool de 20 !
+            Debug.Log("ATTENTION pool vide !!!!!!!!!!!"); // voir à créer d'autres objets au cas ou ?!?
         }
         usedChunk.Add(unUsedChunk[0]);
         unUsedChunk.RemoveAt(0);
         Chunk ck = usedChunk[usedChunk.Count - 1];
         GameObject chunkGo = ck.gameObject;
-        chunkGo.transform.position = new Vector3(chunkPosX * chunkSize, chunkPosY * chunkSize, 0);
-        ck.player = player;
-        ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!!
-        Tilemap[] tilemaps = chunkGo.GetComponentsInChildren<Tilemap>();
-        // toDo refacto tout ça => just a POC !
-        var tilemap = tilemaps[0].GetComponent<TileMapScript>();
-        var wallmap = tilemaps[1].GetComponent<TileMapScript>();
-        tilemap.tilePosX = chunkPosX * chunkSize;
-        wallmap.tilePosX = chunkPosX * chunkSize;
-        tilemap.tilePosY = chunkPosY * chunkSize;
-        wallmap.tilePosY = chunkPosY * chunkSize;
-        tilemap.tilesWorldMap = tilesWorldMap;
-        wallmap.tilesWorldMap = tilesWorldMap;
-        /*ck.tileMapScript.tilePosX = chunkPosX * chunkSize;
-        ck.tileMapScript.tilePosY = chunkPosY * chunkSize;*/
+        int worldPosX = chunkPosX * chunkSize;
+        int worldPosY = chunkPosY * chunkSize;
+        ck.indexXWorldPos = worldPosX;
+        ck.indexYWorldPos = worldPosY;
+        chunkGo.transform.position = new Vector3(worldPosX, worldPosY, 0);
+        // ck.player = player;
+        ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!! => voir si pas out of bound
+        var chunkData = GetChunkData(chunkPosX, chunkPosY);
+        ck.tileMapTileMapScript.Init(worldPosX, worldPosY, tilesWorldMap, chunkData.tilemapData);
+        ck.wallTileMapScript.Init(worldPosX, worldPosY, wallTilesMap, chunkData.wallmapData);
         ck.indexX = chunkPosX;
         ck.indexY = chunkPosY;
         chunkGo.SetActive(true);
@@ -173,85 +203,52 @@ public class ChunkService : MonoBehaviour {
     private bool ChunkAlreadyCreate(int x, int y) {
         return usedChunk.Find(chunk => chunk.indexX == x && chunk.indexY == y);
     }
-    private IEnumerator StartPool(Vector3 playerPos) {
-        var diff = 4;
-        // ToDO voir a ne le faire que si top bottom left et right > 0 et < length
-        var chunkIndexX = (int)playerPos.x / chunkSize;
-        var chunkIndexY = (int)playerPos.y / chunkSize;
-        var playerPosXMap = (int)playerPos.x % chunkSize;
-        var playerPosYMap = (int)playerPos.y % chunkSize;
-        var top = playerPosYMap > halfChunk + diff;
-        var bottom = playerPosYMap < halfChunk - diff;
-        var left = playerPosXMap < halfChunk - diff;
-        var right = playerPosXMap > halfChunk + diff;
-        if (right && chunkIndexX + 1 < boundX) {
-            if (bottom && chunkIndexY - 1 >= 0) {
-                // diag bottom right
-                if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
-                    ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-                if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY - 1)) {
-                    ManageChunkFromPool(chunkIndexX + 1, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-            }
-            if (top) {
-                // diag top right 
-                if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
-                    ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-                if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY + 1)) {
-                    ManageChunkFromPool(chunkIndexX + 1, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-            }
-            // only right
-            if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY)) {
-                ManageChunkFromPool(chunkIndexX + 1, chunkIndexY);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-            }
-        } else if (left && chunkIndexX - 1 >= 0) {
-            if (bottom) {
-                // diag bottom left
-                if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
-                    ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-                if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY - 1)) {
-                    ManageChunkFromPool(chunkIndexX - 1, chunkIndexY - 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-            }
-            if (top) {
-                // diag top left 
-                if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
-                    ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-                if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY + 1)) {
-                    ManageChunkFromPool(chunkIndexX - 1, chunkIndexY + 1);
-                    yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-                }
-            }
-            // only left
-            if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY)) {
-                ManageChunkFromPool(chunkIndexX - 1, chunkIndexY);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-            }
-        } else if (top && chunkIndexY + 1 <= boundY) {
-            // only top
-            if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
-                ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-            }
-        } else if (bottom && chunkIndexY - 1 >= 0) {
-            // only bottom
-            if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
-                ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
-                yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
-            }
+
+    private IEnumerator StartPoolChunk(int x, int y) {
+        ManageChunkFromPool(x, y);
+        yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+    }
+
+    private IEnumerator StartPool(int chunkIndexX, int chunkIndexY) {
+        // top
+        if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY + 1)) {
+            ManageChunkFromPool(chunkIndexX, chunkIndexY + 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // top right
+        if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY + 1)) {
+            ManageChunkFromPool(chunkIndexX + 1, chunkIndexY + 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // top left
+        if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY + 1)) {
+            ManageChunkFromPool(chunkIndexX - 1, chunkIndexY + 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // left
+        if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY)) {
+            ManageChunkFromPool(chunkIndexX - 1, chunkIndexY);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // right
+        if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY)) {
+            ManageChunkFromPool(chunkIndexX + 1, chunkIndexY);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // bottom
+        if (!ChunkAlreadyCreate(chunkIndexX, chunkIndexY - 1)) {
+            ManageChunkFromPool(chunkIndexX, chunkIndexY - 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // bottom left
+        if (!ChunkAlreadyCreate(chunkIndexX - 1, chunkIndexY - 1)) {
+            ManageChunkFromPool(chunkIndexX - 1, chunkIndexY - 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
+        }
+        // bottom right
+        if (!ChunkAlreadyCreate(chunkIndexX + 1, chunkIndexY - 1)) {
+            ManageChunkFromPool(chunkIndexX + 1, chunkIndexY - 1);
+            yield return new WaitForSeconds(waitingTimeAfterCreateChunk);
         }
     }
 }

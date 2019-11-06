@@ -14,9 +14,12 @@ public class CycleDay : MonoBehaviour {
     private readonly int secondInDay = 86400;
     private int timerDay = 0;
     private int convertedInRealSecond;
-    private float intensity = 0f;
+    private static float intensity = 0f;
     private Tilemap tileLightMap;
-    // private List<Material> materials = new List<Material>();
+    // event
+    public delegate void CycleDayHandler(float intenisty);
+    public static event CycleDayHandler RefreshIntensity;
+    public int lastHour = -1;
 
     void Start() {
         tileLightMap = GetComponentInChildren<Tilemap>();
@@ -25,9 +28,8 @@ public class CycleDay : MonoBehaviour {
         ConvertTime();
         StartCoroutine(DayNightCicle());
     }
-    public float GetIntensity() {
-        // return intensity;
-        return 0;
+    public static float GetIntensity() {
+        return intensity;
     }
     public void ConvertTime() {
         int durationOnSecond = durationDayOnMinute * 60;
@@ -37,7 +39,12 @@ public class CycleDay : MonoBehaviour {
         while (true) {
             currentHour = timerDay / 60 / 60;
             SetIntensity(currentHour);
+            if (lastHour != currentHour) {
+                lastHour = currentHour;
+                RefreshIntensity(intensity);
+            }
             timerDay = currentHour == 24 ? 0 : timerDay += convertedInRealSecond;
+            
             yield return new WaitForSeconds(1);
         }
     }

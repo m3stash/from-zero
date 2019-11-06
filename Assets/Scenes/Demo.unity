@@ -3469,7 +3469,7 @@ PrefabInstance:
     - target: {fileID: 3346800735364998950, guid: 41de9baee7b18384084a60e85753b5a1,
         type: 3}
       propertyPath: chunkSize
-      value: 32
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 938428963, guid: 41de9baee7b18384084a60e85753b5a1, type: 3}
       propertyPath: m_Mode
@@ -3479,6 +3479,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Mode
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3346800735364998955, guid: 41de9baee7b18384084a60e85753b5a1,
+        type: 3}
+      propertyPath: numberOfPool
+      value: 60
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 41de9baee7b18384084a60e85753b5a1, type: 3}

@@ -128,8 +128,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15e5f17b9048f843becaf5391097a9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilePosX: 0
-  tilePosY: 0
+  PosX: 0
+  PosY: 0
+  hasAlreadyInit: 0
 --- !u!1 &2004685542
 GameObject:
   m_ObjectHideFlags: 0
@@ -290,17 +291,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbdeaf869267f56448d9519a0bf7c8c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilemap: {fileID: 8195094280356815112}
+  lightService: {fileID: 0}
+  tileMapTileMapScript: {fileID: 0}
+  wallTileMapScript: {fileID: 0}
+  tilemapTile: {fileID: 8195094280356815112}
   tilemapWall: {fileID: 1304860362}
   tilemapShadow: {fileID: 2004685544}
   player: {fileID: 0}
-  cycleDay: {fileID: 0}
   indexX: 0
   indexY: 0
   indexXWorldPos: 0
   indexYWorldPos: 0
   chunkSize: 0
-  lightService: {fileID: 0}
 --- !u!61 &5899460512082029567
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -505,8 +507,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15e5f17b9048f843becaf5391097a9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tilePosX: 0
-  tilePosY: 0
+  PosX: 0
+  PosY: 0
+  hasAlreadyInit: 0
 --- !u!50 &5672246170223171587
 Rigidbody2D:
   serializedVersion: 4
@@ -580,3 +583,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2288f63f8f1a6c64a8ff90f10be6401b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chunk: {fileID: 0}
+  cam: {fileID: 0}

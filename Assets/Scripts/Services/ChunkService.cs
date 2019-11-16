@@ -19,9 +19,10 @@ public class ChunkService : MonoBehaviour {
     private GameObject player;
     private Camera playerCam;
     private int[,][,] tilesMapChunks;
-    private float[,] tilesLightMap;
+    private int[,] tilesLightMap;
     private int[,] tilesWorldMap;
     private int[,] wallTilesMap;
+    private int[,] tilesShadowMap;
     private Dictionary<int, TileBase> tilebaseDictionary;
     private Transform worldMapTransform;
     private float waitingTimeAfterCreateChunk = 0.1f;
@@ -31,16 +32,16 @@ public class ChunkService : MonoBehaviour {
     private int boundX;
     private int boundY;
     private LightService lightService;
-    private float[,] tilesShadowMap;
     private int currentPlayerChunkX;
     private int currentPlayerChunkY;
     private readonly int maxChunkGapWithPlayerX = 6;
     private readonly int maxChunkGapWithPlayerY = 4;
     private string chunkDirectory = "chunk-data";
     private ChunkDataModel[,] cacheChunkData;
-
     private int chunkXLength;
     private int chunkYLength;
+    private int oldPosX;
+    private int oldPosY;
 
     public void FixedUpdate() {
         ManageChunkPoolFromPlayerPos();
@@ -48,13 +49,23 @@ public class ChunkService : MonoBehaviour {
     private void ManageChunkPoolFromPlayerPos() {
         currentPlayerChunkX = (int)player.transform.position.x / chunkSize;
         currentPlayerChunkY = (int)player.transform.position.y / chunkSize;
-        var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= maxChunkGapWithPlayerX || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= maxChunkGapWithPlayerY);
-        chuncksToDesactivate.ForEach(chunk => PlayerIsTooFar(chunk));
-        // too voir a améliorer ça  !!!!
-        StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY));
-        StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY));
-        StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY - 1));
-        StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY + 1));
+        if (oldPosX != currentPlayerChunkX || oldPosY != currentPlayerChunkY) {
+            var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= maxChunkGapWithPlayerX || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= maxChunkGapWithPlayerY);
+            chuncksToDesactivate.ForEach(chunk => PlayerIsTooFar(chunk));
+            
+        }
+        if (currentPlayerChunkX > oldPosX) { // right
+            StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY));
+        } else if (currentPlayerChunkX < oldPosX) { // left
+            StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY));
+        }
+        if (currentPlayerChunkY > oldPosY) { // top
+            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY + 1));
+        } else if (currentPlayerChunkY < oldPosY) { // bottom
+            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY - 1));
+        }
+        oldPosX = currentPlayerChunkX;
+        oldPosY = currentPlayerChunkY;
     }
     public void SetWallMap(int[,] map) {
         wallTilesMap = map;
@@ -65,7 +76,7 @@ public class ChunkService : MonoBehaviour {
     public Chunk GetChunk(int posX, int posY) {
         return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
     }
-    public void Init(int chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] tilesWorldMap, float[,] tilesLightMap, GameObject player, LightService lightService, float[,] tilesShadowMap) {
+    public void Init(int chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] tilesWorldMap, int[,] tilesLightMap, GameObject player, LightService lightService, int[,] tilesShadowMap) {
         playerCam = player.GetComponentInChildren<Camera>();
         boundX = tilesMapChunks.GetUpperBound(0);
         boundY = tilesMapChunks.GetUpperBound(1);
@@ -79,7 +90,7 @@ public class ChunkService : MonoBehaviour {
         this.lightService = lightService;
         this.tilesShadowMap = tilesShadowMap;
         cacheChunkData = new ChunkDataModel[boundX, boundY];
-        CreatePoolChunk(20, 51);
+        CreatePoolChunk(20, 52);
     }
     public void CreateChunksFromMaps(int[,] tilesMap, int chunkSize) {
         chunkXLength = (tilesMap.GetUpperBound(0) + 1) / chunkSize;
@@ -122,6 +133,7 @@ public class ChunkService : MonoBehaviour {
             isVisibleScript.chunk = ck;
             ck.tileMapTileMapScript = ck.tilemapTile.GetComponent<TileMapScript>();
             ck.wallTileMapScript = ck.tilemapWall.GetComponent<TileMapScript>();
+            ck.shadowTileMapScript = ck.tilemapShadow.GetComponent<TileMapScript>();
             chunk.gameObject.SetActive(false);
             ck.tilesLightMap = tilesLightMap;
             ck.wallTilesMap = wallTilesMap;
@@ -139,12 +151,14 @@ public class ChunkService : MonoBehaviour {
         InitialiseChunkPooling();
         // voir à améliorer ça pour faire de l'auto calc sur la range
         for (var x = xStart - 4; x < xStart + 5; x++) {
-            for (var y = yStart - 3; y < yStart + 3; y++) {
+            for (var y = yStart - 3; y < yStart + 4; y++) {
                 ManageChunkFromPool(x, y);
             }
         }
         // spawn player on center start chunk
-        player.transform.position = new Vector3(xStart * chunkSize + (chunkSize / 2), yStart * chunkSize + (chunkSize / 6), 0);
+        oldPosX = xStart;
+        oldPosY = yStart;
+        player.transform.position = new Vector3(xStart * chunkSize + (chunkSize / 2), yStart * chunkSize + (chunkSize / 2), 0);
     }
     private ChunkDataModel GetChunkData(int PosX, int PosY) {
         /*var chunkPath = "/" + chunkDirectory + "/" + "chunk_" + PosX + "_" + PosY;
@@ -160,7 +174,7 @@ public class ChunkService : MonoBehaviour {
             return chunkData;
         }
         return cacheChunkData[PosX, PosY];*/
-        return TileMapService.CreateChunkDataModel(PosX, PosY, tilesWorldMap, wallTilesMap, chunkSize);
+        return TileMapService.CreateChunkDataModel(PosX, PosY, tilesWorldMap, wallTilesMap, tilesShadowMap, chunkSize);
     }
     private void ManageChunkFromPool(int chunkPosX, int chunkPosY) {
         if (unUsedChunk.Count == 0) {
@@ -178,8 +192,11 @@ public class ChunkService : MonoBehaviour {
         // ck.player = player;
         ck.tilesMap = tilesMapChunks[chunkPosX, chunkPosY]; // ToDo régler le pb de out of range !!!!!!!!! => voir si pas out of bound
         var chunkData = GetChunkData(chunkPosX, chunkPosY);
-        ck.tileMapTileMapScript.Init(worldPosX, worldPosY, tilesWorldMap, chunkData.tilemapData);
-        ck.wallTileMapScript.Init(worldPosX, worldPosY, wallTilesMap, chunkData.wallmapData);
+        var boundX = tilesWorldMap.GetUpperBound(0);
+        var boundY = tilesWorldMap.GetUpperBound(1);
+        ck.tileMapTileMapScript.Init(worldPosX, worldPosY, tilesWorldMap, chunkData.tilemapData, boundX, boundY);
+        ck.wallTileMapScript.Init(worldPosX, worldPosY, wallTilesMap, chunkData.wallmapData, boundX, boundY);
+        ck.shadowTileMapScript.Init(worldPosX, worldPosY, tilesShadowMap, chunkData.shadowmapData, boundX, boundY);
         ck.indexX = chunkPosX;
         ck.indexY = chunkPosY;
         chunkGo.SetActive(true);

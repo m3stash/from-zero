@@ -137,14 +137,14 @@ public class TileSelector : MonoBehaviour {
     }
 
     private void DeleteTile(RaycastHit2D hit) {
-        if (timeClick > 0.2f && onClick) {
+        if (timeClick > 0.1f && onClick) {
             tile_dig_1.SetActive(true);
         }
-        if (timeClick > 0.4f && onClick) {
+        if (timeClick > 0.2f && onClick) {
             tile_dig_1.SetActive(false);
             tile_dig_2.SetActive(true);
         }
-        if (timeClick > 0.6f && onClick) {
+        if (timeClick > 0.3f && onClick) {
             tile_dig_2.SetActive(false);
             tile_dig_3.SetActive(true);
             worldManager.DeleteTile((int)hit.point.x, (int)hit.point.y);

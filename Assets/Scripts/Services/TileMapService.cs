@@ -5,11 +5,12 @@ using UnityEngine.Tilemaps;
 public static class TileMapService {
 
     private static System.Random rand = new System.Random();
-    public static ChunkDataModel CreateChunkDataModel(int PosX, int PosY, int[,] tilesWorldMap, int[,] wallTilesMap, int chunkSize) {
+    public static ChunkDataModel CreateChunkDataModel(int PosX, int PosY, int[,] tilesWorldMap, int[,] wallTilesMap, int[,] tilesShadowMap, int chunkSize) {
         var boundX = tilesWorldMap.GetUpperBound(0);
         var boundY = tilesWorldMap.GetUpperBound(1);
         var tilemapData = new TileDataModel[chunkSize, chunkSize];
         var wallmapData = new TileDataModel[chunkSize, chunkSize];
+        var shadowmapData = new TileDataModel[chunkSize, chunkSize];
         for (var x = 0; x < chunkSize; x++) {
             for (var y = 0; y < chunkSize; y++) {
                 var currentTilePosX = PosX * chunkSize + x;
@@ -21,28 +22,33 @@ public static class TileMapService {
                 int yLess = currentTilePosY - 1;
                 int maskTilemap = 0;
                 int maskWallmap = 0;
+                int maskShadowmap = 0;
 
                 if (yMore <= boundY) {
                     // top = CheckIfSameId(top, currentId) ? top : 0;
                     maskTilemap += tilesWorldMap[currentTilePosX, yMore] > 0 ? 1 : 0;
                     maskWallmap += wallTilesMap[currentTilePosX, yMore] > 0 ? 1 : 0;
+                    maskShadowmap += tilesShadowMap[currentTilePosX, yMore] > 0 ? 1 : 0;
                 }
 
                 if (xMore <= boundX) {
                     // right = CheckIfSameId(right, currentId) ? right : 0;
                     maskTilemap += tilesWorldMap[xMore, currentTilePosY] > 0 ? 4 : 0;
                     maskWallmap += wallTilesMap[xMore, currentTilePosY] > 0 ? 4 : 0;
+                    maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 4 : 0;
 
                     if (yMore <= boundY) {
                         // diaRightTop = CheckIfSameId(diaRightTop, currentId) ? diaRightTop : 0;
                         maskTilemap += tilesWorldMap[xMore, yMore] > 0 ? 2 : 0;
                         maskWallmap += wallTilesMap[xMore, yMore] > 0 ? 2 : 0;
+                        maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 2 : 0;
                     }
 
                     if (yLess > -1) {
                         // diagBottomRight = CheckIfSameId(diagBottomRight, currentId) ? diagBottomRight : 0;
                         maskTilemap += tilesWorldMap[xMore, yLess] > 0 ? 8 : 0;
                         maskWallmap += wallTilesMap[xMore, yLess] > 0 ? 8 : 0;
+                        maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 8 : 0;
                     }
                 }
 
@@ -50,23 +56,27 @@ public static class TileMapService {
                     // bottom = CheckIfSameId(bottom, currentId) ? bottom : 0;
                     maskTilemap += tilesWorldMap[currentTilePosX, yLess] > 0 ? 16 : 0;
                     maskWallmap += wallTilesMap[currentTilePosX, yLess] > 0 ? 16 : 0;
+                    maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 16 : 0;
                 }
 
                 if (xLess > -1) {
                     // left = CheckIfSameId(left, currentId) ? left : 0;
                     maskTilemap += tilesWorldMap[xLess, currentTilePosY] > 0 ? 64 : 0;
                     maskWallmap += wallTilesMap[xLess, currentTilePosY] > 0 ? 64 : 0;
+                    maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 64 : 0;
 
                     if (yLess > -1) {
                         // diagBottomLeft = CheckIfSameId(diagBottomLeft, currentId) ? diagBottomLeft : 0;
                         maskTilemap += tilesWorldMap[xLess, yLess] > 0 ? 32 : 0;
                         maskWallmap += wallTilesMap[xLess, yLess] > 0 ? 32 : 0;
+                        maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 32 : 0;
                     }
 
                     if (yMore <= boundY) {
                         // diagTopLeft = CheckIfSameId(diagTopLeft, currentId) ? diagTopLeft : 0;
                         maskTilemap += tilesWorldMap[xLess, yMore] > 0 ? 128 : 0;
                         maskWallmap += wallTilesMap[xLess, yLess] > 0 ? 128 : 0;
+                        maskShadowmap += tilesShadowMap[xMore, currentTilePosY] > 0 ? 128 : 0;
                     }
                 }
                 maskTilemap = GetMaskByOriginal(maskTilemap);
@@ -81,11 +91,18 @@ public static class TileMapService {
                     rotation = GetTransform((byte)maskWallmap), // todo void a ne pas stocker de transform
                     colliderType = 0,
                 };
+                maskShadowmap = GetMaskByOriginal(maskShadowmap);
+                shadowmapData[x, y] = new TileDataModel {
+                    index = GetIndex((byte)maskShadowmap),
+                    rotation = GetTransform((byte)maskShadowmap), // todo void a ne pas stocker de transform
+                    colliderType = 0,
+                };
             }
         }
         return new ChunkDataModel {
             tilemapData = tilemapData,
             wallmapData = wallmapData,
+            shadowmapData = shadowmapData,
         };
     }
 
@@ -102,21 +119,27 @@ public static class TileMapService {
         }
         if (xMore <= boundX) {
             maskTilemap += tilesWorldMap[xMore, currentTilePosY] > 0 ? 4 : 0;
+
             if (yMore <= boundY) {
                 maskTilemap += tilesWorldMap[xMore, yMore] > 0 ? 2 : 0;
             }
+
             if (yLess > -1) {
                 maskTilemap += tilesWorldMap[xMore, yLess] > 0 ? 8 : 0;
             }
         }
+
         if (yLess > -1) {
             maskTilemap += tilesWorldMap[currentTilePosX, yLess] > 0 ? 16 : 0;
         }
+
         if (xLess > -1) {
             maskTilemap += tilesWorldMap[xLess, currentTilePosY] > 0 ? 64 : 0;
+
             if (yLess > -1) {
                 maskTilemap += tilesWorldMap[xLess, yLess] > 0 ? 32 : 0;
             }
+
             if (yMore <= boundY) {
                 maskTilemap += tilesWorldMap[xLess, yMore] > 0 ? 128 : 0;
             }
@@ -124,7 +147,6 @@ public static class TileMapService {
         maskTilemap = GetMaskByOriginal(maskTilemap);
         tileDataModel.index = GetIndex((byte)maskTilemap);
         tileDataModel.rotation = GetTransform((byte)maskTilemap);
-        tileDataModel.colliderType = 2;
     }
 
     private static int GetMaskByOriginal(int mask) {

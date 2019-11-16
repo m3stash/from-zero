@@ -10,14 +10,14 @@ public class TileMapScript : MonoBehaviour {
     public bool hasAlreadyInit;
     private int boundX;
     private int boundY;
-    public void Init(int PosX, int PosY, int[,] tileWorldMap, TileDataModel[,] tileMapdata) {
+    public void Init(int PosX, int PosY, int[,] tileWorldMap, TileDataModel[,] tileMapdata, int boundX, int boundY) {
         hasAlreadyInit = false;
         this.PosX = PosX;
         this.PosY = PosY;
         this.tileWorldMap = tileWorldMap;
         this.tileMapdata = tileMapdata;
-        boundX = tileWorldMap.GetUpperBound(0);
-        boundY = tileWorldMap.GetUpperBound(1);
+        this.boundX = boundX;
+        this.boundY = boundY;
     }
 
     public void SetTileData(int x, int y, ref TileData tileData, Sprite[] m_Sprites) {

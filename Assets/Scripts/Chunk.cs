@@ -9,13 +9,14 @@ public class Chunk : MonoBehaviour {
     private TilemapCollider2D tc2d;
     public TileMapScript tileMapTileMapScript;
     public TileMapScript wallTileMapScript;
+    public TileMapScript shadowTileMapScript;
     public Tilemap tilemapTile;
     public Tilemap tilemapWall;
     public Tilemap tilemapShadow;
     public int[,] wallTilesMap;
     public int[,] tilesMap;
-    public float[,] tilesLightMap;
-    public float[,] tilesShadowMap;
+    public int[,] tilesLightMap;
+    public int[,] tilesShadowMap;
     public GameObject[,] tilesObjetMap;
     public GameObject player;
     public Dictionary<int, TileBase> tilebaseDictionary;
@@ -35,19 +36,20 @@ public class Chunk : MonoBehaviour {
             RefreshTiles();
         }
     }
-    private void RefreshShadowMap(float intensity) {
-        if (!isChunkVisible) return;
+    private void RefreshShadowMap(int intensity) {
+        if (!isChunkVisible)
+            return;
         for (var x = 0; x < chunkSize; x++) {
             for (var y = 0; y < chunkSize; y++) {
                 var shadow = tilesShadowMap[indexXWorldPos + x, indexYWorldPos + y] + intensity;
                 var light = tilesLightMap[indexXWorldPos + x, indexYWorldPos + y];
-                if ((wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0 && wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0) || (shadow == 0 && light == 0)) {
+                if ((wallTilesMap[indexXWorldPos + x, indexYWorldPos + y] == 0 && tilesMap[x, y] == 0) || (shadow == 0 && light == 0)) {
                     tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, 0));
                 } else {
-                    if (light <= shadow && light < 1) {
-                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, light));
+                    if (light <= shadow && light < 100) {
+                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, (float)light * 0.01f));
                     } else {
-                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, shadow));
+                        tilemapShadow.SetColor(new Vector3Int(x, y, 0), new Color(0, 0, 0, (float)shadow * 0.01f));
                     }
                 }
             }
@@ -73,7 +75,7 @@ public class Chunk : MonoBehaviour {
             } else {
                 tileArray[index] = null;
             }
-            if(tilesShadowMap[x, y] > 0) {
+            if (tilesShadowMap[x, y] > 0) {
                 tileArrayShadow[index] = tilebaseDictionary[-1];
             } else {
                 tileArrayShadow[index] = null;

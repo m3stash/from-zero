@@ -12,8 +12,8 @@ public class WorldManager : MonoBehaviour {
     private LevelGenerator levelGenerator;
     private GameObject tile_selector;
     private GameObject player;
-    private float[,] tilesLightMap;
-    private float[,] tilesShadowMap;
+    private int[,] tilesLightMap;
+    private int[,] tilesShadowMap;
     private int[,] tilesWorldMap;
     private int[,] wallTilesMap;
     private GameObject[,] tilesObjetMap;
@@ -25,7 +25,7 @@ public class WorldManager : MonoBehaviour {
     public TileBase_cfg tilebase_cfg;
     public int chunkSize;
     // event
-    public delegate void LightEventHandler(float intensity);
+    public delegate void LightEventHandler(int intensity);
     public static event LightEventHandler RefreshLight;
 
     private void InitFolders() {
@@ -50,13 +50,13 @@ public class WorldManager : MonoBehaviour {
         tile_selector = Instantiate(Resources.Load("Prefabs/tile_selector")) as GameObject;
     }
     private void CreateLightMap() {
-        tilesLightMap = new float[worldSizeX, worldSizeY];
+        tilesLightMap = new int[worldSizeX, worldSizeY];
         for(var x = 0; x < worldSizeX; x++) {
             for (var y = 0; y < worldSizeY; y++) {
-                tilesLightMap[x, y] = 1;
+                tilesLightMap[x, y] = 100;
             }
         }
-        tilesShadowMap = new float[worldSizeX, worldSizeY];
+        tilesShadowMap = new int[worldSizeX, worldSizeY];
         levelGenerator.GenerateWorldLight(tilesLightMap, tilesShadowMap, tilesWorldMap, wallTilesMap);
     }
     private void CreateWorldMap() {

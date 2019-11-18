@@ -71,7 +71,7 @@ public class LevelGenerator : MonoBehaviour {
         }
     }*/
 
-    public void GenerateWorldLight(float[,] tilesLightMap, float[,] tilesShadowMap, int[,] tilesWorldMap, int[,] wallTilesMap) {
+    public void GenerateWorldLight(int[,] tilesLightMap, int[,] tilesShadowMap, int[,] tilesWorldMap, int[,] wallTilesMap) {
         var boundX = tilesWorldMap.GetUpperBound(0);
         var boundY = tilesWorldMap.GetUpperBound(1);
         // toDo a implémenter la tilemap background
@@ -115,20 +115,20 @@ public class LevelGenerator : MonoBehaviour {
         return (x < 0 || x > tilesWorldMap.GetUpperBound(0)) || (y < 0 || y > tilesWorldMap.GetUpperBound(1));
     }
 
-    private float GetAmountLight(int tile, int wallTile, float lastLight) { // TODO REFACTO pour utiliser le light service !!!!!!!!!!!!
+    private int GetAmountLight(int tile, int wallTile, int lastLight) { // TODO REFACTO pour utiliser le light service !!!!!!!!!!!!
         if (tile == 0 && wallTile == 0) {
             return 0;
         }
-        float newLight = 0;
+        int newLight = 0;
         if (tile > 0) {
-            newLight = lastLight + 0.15f;
+            newLight = lastLight + 15;
         } else {
             if (wallTile > 0) {
-                newLight = lastLight + 0.05f;
+                newLight = lastLight + 5;
             } else {
                 return 0;
             }
         }
-        return newLight > 1 ? 1 : newLight;
+        return newLight > 100 ? 100 : newLight;
     }
 }

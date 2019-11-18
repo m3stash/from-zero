@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
-
     private float speed = 10f;
     [SerializeField]
     private readonly float jumpForces = 200f;
@@ -34,8 +33,6 @@ public class Player : MonoBehaviour {
             toolbar.AddItem(collision.gameObject);
         }
     }
-
-
 
     void FixedUpdate() {
         float moveHorizontal = Input.GetAxis("Horizontal");

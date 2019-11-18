@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82d90926198bf5944b5743dd7b761847, type: 3}
+  m_Script: {fileID: 11500000, guid: 16f94d8666716b340a2cbda603950cad, type: 3}
   m_Name: Wall_dirt
   m_EditorClassIdentifier: 
   m_Sprites:

@@ -42,41 +42,14 @@ public class ChunkService : MonoBehaviour {
     private int chunkYLength;
     private int oldPosX;
     private int oldPosY;
+    private int oldPlayerPosX;
+    private int oldPlayerPosY;
+    private GameObject[,] tilesObjetMap;
+    // event
+    public delegate void LightEventHandler(int intensity);
+    public static event LightEventHandler RefreshLight;
 
-    public void FixedUpdate() {
-        ManageChunkPoolFromPlayerPos();
-    }
-    private void ManageChunkPoolFromPlayerPos() {
-        currentPlayerChunkX = (int)player.transform.position.x / chunkSize;
-        currentPlayerChunkY = (int)player.transform.position.y / chunkSize;
-        if (oldPosX != currentPlayerChunkX || oldPosY != currentPlayerChunkY) {
-            var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= maxChunkGapWithPlayerX || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= maxChunkGapWithPlayerY);
-            chuncksToDesactivate.ForEach(chunk => PlayerIsTooFar(chunk));
-            
-        }
-        if (currentPlayerChunkX > oldPosX) { // right
-            StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY));
-        } else if (currentPlayerChunkX < oldPosX) { // left
-            StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY));
-        }
-        if (currentPlayerChunkY > oldPosY) { // top
-            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY + 1));
-        } else if (currentPlayerChunkY < oldPosY) { // bottom
-            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY - 1));
-        }
-        oldPosX = currentPlayerChunkX;
-        oldPosY = currentPlayerChunkY;
-    }
-    public void SetWallMap(int[,] map) {
-        wallTilesMap = map;
-    }
-    public int[,] GetTilesMapChunks(int x, int y) {
-        return tilesMapChunks[x, y];
-    }
-    public Chunk GetChunk(int posX, int posY) {
-        return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
-    }
-    public void Init(int chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] tilesWorldMap, int[,] tilesLightMap, GameObject player, LightService lightService, int[,] tilesShadowMap) {
+    public void Init(int chunkSize, Dictionary<int, TileBase> _tilebaseDictionary, int[,] tilesWorldMap, int[,] tilesLightMap, GameObject player, LightService lightService, int[,] tilesShadowMap, GameObject[,] tilesObjetMap) {
         playerCam = player.GetComponentInChildren<Camera>();
         boundX = tilesMapChunks.GetUpperBound(0);
         boundY = tilesMapChunks.GetUpperBound(1);
@@ -90,7 +63,49 @@ public class ChunkService : MonoBehaviour {
         this.lightService = lightService;
         this.tilesShadowMap = tilesShadowMap;
         cacheChunkData = new ChunkDataModel[boundX, boundY];
+        this.tilesObjetMap = tilesObjetMap;
         CreatePoolChunk(20, 52);
+    }
+    public void FixedUpdate() {
+        ManageChunkPoolFromPlayerPos();
+    }
+    private void ManageChunkPoolFromPlayerPos() {
+        currentPlayerChunkX = (int)player.transform.position.x / chunkSize;
+        currentPlayerChunkY = (int)player.transform.position.y / chunkSize;
+        if (oldPosX != currentPlayerChunkX || oldPosY != currentPlayerChunkY) {
+            var chuncksToDesactivate = usedChunk.FindAll(chunk => Mathf.Abs(chunk.indexX - currentPlayerChunkX) >= maxChunkGapWithPlayerX || Mathf.Abs(chunk.indexY - currentPlayerChunkY) >= maxChunkGapWithPlayerY);
+            chuncksToDesactivate.ForEach(chunk => PlayerIsTooFar(chunk));
+        }
+        if (currentPlayerChunkX > oldPosX) { // right
+            StartCoroutine(StartPool(currentPlayerChunkX + 1, currentPlayerChunkY));
+        } else if (currentPlayerChunkX < oldPosX) { // left
+            StartCoroutine(StartPool(currentPlayerChunkX - 1, currentPlayerChunkY));
+        }
+        if (currentPlayerChunkY > oldPosY) { // top
+            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY + 1));
+        } else if (currentPlayerChunkY < oldPosY) { // bottom
+            StartCoroutine(StartPool(currentPlayerChunkX, currentPlayerChunkY - 1));
+        }
+        var playerX = (int)player.transform.position.x;
+        var playerY = (int)player.transform.position.y;
+        if (oldPlayerPosX != playerX || oldPlayerPosY != playerY) {
+            lightService.RecursivDeleteLight(oldPlayerPosX, oldPlayerPosY, true, tilesObjetMap);
+            lightService.RecursivAddNewLight(playerX, playerY, 0);
+        }
+        oldPosX = currentPlayerChunkX;
+        oldPosY = currentPlayerChunkY;
+        oldPlayerPosX = (int)player.transform.position.x;
+        oldPlayerPosY = (int)player.transform.position.y;
+        RefreshLight(CycleDay.GetIntensity());
+    }
+    public void SetWallMap(int[,] map) {
+        wallTilesMap = map;
+    }
+    public int[,] GetTilesMapChunks(int x, int y) {
+        return tilesMapChunks[x, y];
+    }
+    public Chunk GetChunk(int posX, int posY) {
+        return usedChunk.Find(chunk => chunk.indexX == posX && chunk.indexY == posY);
     }
     public void CreateChunksFromMaps(int[,] tilesMap, int chunkSize) {
         chunkXLength = (tilesMap.GetUpperBound(0) + 1) / chunkSize;
@@ -158,6 +173,8 @@ public class ChunkService : MonoBehaviour {
         // spawn player on center start chunk
         oldPosX = xStart;
         oldPosY = yStart;
+        oldPlayerPosX = xStart * chunkSize + (chunkSize / 2);
+        oldPlayerPosY = yStart * chunkSize + (chunkSize / 2);
         player.transform.position = new Vector3(xStart * chunkSize + (chunkSize / 2), yStart * chunkSize + (chunkSize / 2), 0);
     }
     private ChunkDataModel GetChunkData(int PosX, int PosY) {

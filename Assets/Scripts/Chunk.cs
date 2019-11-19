@@ -32,6 +32,7 @@ public class Chunk : MonoBehaviour {
     private void OnEnable() {
         CycleDay.RefreshIntensity += RefreshShadowMap;
         WorldManager.RefreshLight += RefreshShadowMap;
+        ChunkService.RefreshLight += RefreshShadowMap;
         if (!firstInitialisation) {
             RefreshTiles();
         }
